@@ -3,12 +3,22 @@
 let currentGame = null;
 let currentPlayer = null;
 let currentScores = {};
+let devMode = false;
+
+// localStorage keys
+const STORAGE_KEYS = {
+    GAME_STATE: 'yahtzee_game_state',
+    DEV_MODE: 'yahtzee_dev_mode'
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
 function initializeApp() {
+    // Load saved developer mode state
+    loadDevModeState();
+    
     // Get DOM elements
     const gameSetup = document.getElementById('game-setup');
     const gamePlay = document.getElementById('game-play');
@@ -17,10 +27,18 @@ function initializeApp() {
     
     const startGameBtn = document.getElementById('start-game');
     const newGameBtn = document.getElementById('new-game');
+    const resetGameBtn = document.getElementById('reset-game');
+    const saveGameBtn = document.getElementById('save-game');
     const currentPlayerSelect = document.getElementById('current-player-select');
     const calculateAllBtn = document.getElementById('calculate-all');
     const rollDiceBtn = document.getElementById('roll-dice');
     const resetDiceBtn = document.getElementById('reset-dice');
+    
+    // Developer mode elements
+    const devModeToggle = document.getElementById('dev-mode-toggle');
+    const quickDemoBtn = document.getElementById('quick-demo');
+    const loadSavedGameBtn = document.getElementById('load-saved-game');
+    const clearSavedDataBtn = document.getElementById('clear-saved-data');
     
     const diceInputs = [
         document.getElementById('die1'),
@@ -33,10 +51,23 @@ function initializeApp() {
     // Event listeners
     startGameBtn.addEventListener('click', startNewGame);
     newGameBtn.addEventListener('click', resetToSetup);
+    resetGameBtn.addEventListener('click', resetCurrentGame);
+    saveGameBtn.addEventListener('click', saveGameState);
     calculateAllBtn.addEventListener('click', calculateAllScores);
     rollDiceBtn.addEventListener('click', rollRandomDice);
     resetDiceBtn.addEventListener('click', resetDice);
     currentPlayerSelect.addEventListener('change', switchPlayer);
+    
+    // Developer mode listeners
+    devModeToggle.addEventListener('change', toggleDevMode);
+    quickDemoBtn.addEventListener('click', createQuickDemo);
+    loadSavedGameBtn.addEventListener('click', loadSavedGame);
+    clearSavedDataBtn.addEventListener('click', clearSavedData);
+    
+    // Test dice buttons
+    document.querySelectorAll('.test-dice-btn').forEach(btn => {
+        btn.addEventListener('click', loadTestDice);
+    });
     
     // Dice input listeners
     diceInputs.forEach(input => {
@@ -51,6 +82,9 @@ function initializeApp() {
     
     // Initialize display
     updateDiceDisplay();
+    
+    // Try to load saved game on startup
+    tryLoadSavedGame();
 }
 
 async function startNewGame() {
@@ -481,6 +515,193 @@ async function updateLeaderboard() {
         console.error('Error updating leaderboard:', error);
     }
 }
+
+// Developer Mode Functions
+function loadDevModeState() {
+    const savedDevMode = localStorage.getItem(STORAGE_KEYS.DEV_MODE);
+    if (savedDevMode === 'true') {
+        devMode = true;
+        document.getElementById('dev-mode-toggle').checked = true;
+        showDevModeFeatures();
+    }
+}
+
+function toggleDevMode() {
+    devMode = document.getElementById('dev-mode-toggle').checked;
+    localStorage.setItem(STORAGE_KEYS.DEV_MODE, devMode.toString());
+    
+    if (devMode) {
+        showDevModeFeatures();
+    } else {
+        hideDevModeFeatures();
+    }
+}
+
+function showDevModeFeatures() {
+    document.querySelectorAll('.dev-mode-section').forEach(section => {
+        section.style.display = 'block';
+    });
+}
+
+function hideDevModeFeatures() {
+    document.querySelectorAll('.dev-mode-section').forEach(section => {
+        section.style.display = 'none';
+    });
+}
+
+function createQuickDemo() {
+    // Create a demo game with test players
+    const demoPlayers = ['Alice', 'Bob', 'Charlie'];
+    
+    // Simulate the API call for demo
+    currentGame = {
+        gameId: 'demo-' + Date.now(),
+        players: demoPlayers.map(name => ({
+            name: name,
+            scorecard: {},
+            finalScore: null
+        }))
+    };
+    
+    setupGamePlay();
+    
+    // Show success message
+    alert('Demo game created with players: ' + demoPlayers.join(', '));
+}
+
+function saveGameState() {
+    if (!currentGame) {
+        alert('No game to save!');
+        return;
+    }
+    
+    const gameState = {
+        currentGame: currentGame,
+        currentPlayer: currentPlayer,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(gameState));
+    alert('Game saved successfully!');
+}
+
+function loadSavedGame() {
+    const savedState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+    if (!savedState) {
+        alert('No saved game found!');
+        return;
+    }
+    
+    try {
+        const gameState = JSON.parse(savedState);
+        currentGame = gameState.currentGame;
+        currentPlayer = gameState.currentPlayer;
+        
+        setupGamePlay();
+        
+        // Restore current player selection
+        if (currentPlayer) {
+            document.getElementById('current-player-select').value = currentPlayer;
+            switchPlayer();
+        }
+        
+        alert('Game loaded successfully!');
+    } catch (error) {
+        alert('Error loading saved game: ' + error.message);
+    }
+}
+
+function tryLoadSavedGame() {
+    // Auto-load saved game if in dev mode
+    if (devMode) {
+        const savedState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+        if (savedState) {
+            try {
+                const gameState = JSON.parse(savedState);
+                currentGame = gameState.currentGame;
+                currentPlayer = gameState.currentPlayer;
+                
+                setupGamePlay();
+                
+                if (currentPlayer) {
+                    document.getElementById('current-player-select').value = currentPlayer;
+                    switchPlayer();
+                }
+            } catch (error) {
+                console.log('Could not auto-load saved game:', error);
+            }
+        }
+    }
+}
+
+function clearSavedData() {
+    localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
+    alert('Saved game data cleared!');
+}
+
+function resetCurrentGame() {
+    if (!currentGame) {
+        alert('No game to reset!');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to reset the current game? All scores will be lost.')) {
+        // Reset all player scorecards
+        currentGame.players.forEach(player => {
+            player.scorecard = {};
+            player.finalScore = null;
+        });
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        // Reset use score buttons
+        document.querySelectorAll('.use-score-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = 'Use';
+        });
+        
+        alert('Game reset successfully!');
+    }
+}
+
+function loadTestDice(event) {
+    const diceString = event.target.dataset.dice;
+    const diceValues = diceString.split(',').map(Number);
+    
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    diceInputs.forEach((input, index) => {
+        input.value = diceValues[index];
+    });
+    
+    updateDiceDisplay();
+    calculateAllScores();
+}
+
+// Enhanced keyboard shortcuts for dev mode
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        calculateAllScores();
+    } else if (e.key === 'r' || e.key === 'R') {
+        rollRandomDice();
+    } else if (e.key === 'c' || e.key === 'C') {
+        resetDice();
+    } else if (devMode && e.key === 's' && e.ctrlKey) {
+        e.preventDefault();
+        saveGameState();
+    } else if (devMode && e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        loadSavedGame();
+    }
+});
 
 // Debounce function to limit API calls
 function debounce(func, wait) {

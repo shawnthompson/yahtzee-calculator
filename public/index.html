@@ -17,6 +17,25 @@
             <!-- Game Setup Section -->
             <section class="game-setup" id="game-setup">
                 <h2>Setup New Game</h2>
+                
+                <!-- Developer Mode Toggle -->
+                <div class="dev-mode-toggle">
+                    <label>
+                        <input type="checkbox" id="dev-mode-toggle"> 
+                        <span>🔧 Developer Mode</span>
+                    </label>
+                </div>
+
+                <!-- Quick Start for Testing -->
+                <div class="dev-mode-section" id="dev-mode-section" style="display: none;">
+                    <h3>Quick Testing</h3>
+                    <div class="dev-buttons">
+                        <button id="quick-demo" class="btn btn-tertiary">🚀 Quick Demo Game</button>
+                        <button id="load-saved-game" class="btn btn-tertiary">💾 Load Saved Game</button>
+                        <button id="clear-saved-data" class="btn btn-tertiary">🗑️ Clear Saved Data</button>
+                    </div>
+                </div>
+
                 <div class="player-setup">
                     <div class="player-inputs">
                         <input type="text" id="player1" placeholder="Player 1 Name" maxlength="20">
@@ -38,7 +57,11 @@
                             <option value="">Select Player</option>
                         </select>
                     </div>
-                    <button id="new-game" class="btn btn-secondary">🔄 New Game</button>
+                    <div class="game-actions">
+                        <button id="save-game" class="btn btn-tertiary">💾 Save Game</button>
+                        <button id="reset-game" class="btn btn-tertiary">🔄 Reset Game</button>
+                        <button id="new-game" class="btn btn-secondary">🔄 New Game</button>
+                    </div>
                 </div>
 
                 <div class="game-content">
@@ -55,6 +78,20 @@
                             <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>
                             <button id="roll-dice" class="btn btn-secondary">🎲 Roll Random Dice</button>
                             <button id="reset-dice" class="btn btn-tertiary">🔄 Reset Dice</button>
+                            
+                            <!-- Developer Mode Test Dice -->
+                            <div class="dev-mode-section" id="dev-test-dice" style="display: none;">
+                                <h4>Test Dice Combinations</h4>
+                                <div class="test-dice-buttons">
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="1,1,1,1,1">Yahtzee (1s)</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="1,2,3,4,5">Large Straight</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="2,3,4,5,6">Large Straight</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="1,2,3,4,6">Small Straight</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="3,3,3,6,6">Full House</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="4,4,4,4,2">4 of a Kind</button>
+                                    <button class="btn btn-tertiary test-dice-btn" data-dice="5,5,5,2,6">3 of a Kind</button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="dice-display">

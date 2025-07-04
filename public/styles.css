@@ -112,6 +112,62 @@ main {
     gap: 10px;
 }
 
+.dev-mode-toggle {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 5px;
+}
+
+.dev-mode-toggle label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.dev-mode-toggle input[type="checkbox"] {
+    transform: scale(1.2);
+}
+
+.dev-mode-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.dev-mode-section h3,
+.dev-mode-section h4 {
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.dev-buttons,
+.test-dice-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.test-dice-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.game-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .current-player {
     display: flex;
     align-items: center;

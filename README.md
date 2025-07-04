@@ -88,9 +88,31 @@ A simple, beautiful web application to calculate Yahtzee scores and manage multi
 - **Final Scores**: Automatic calculation with upper section bonus (35 pts for 63+)
 
 ### Keyboard Shortcuts
+
 - **Enter**: Calculate all scores
 - **R**: Roll random dice
-- **C**: Reset/clear dice
+- **C**: Reset/Clear dice
+- **Ctrl+S**: Save game (Developer Mode)
+- **Ctrl+L**: Load saved game (Developer Mode)
+
+## Developer Mode
+
+For easier testing and development, enable Developer Mode by checking the "🔧 Developer Mode" checkbox on the setup page.
+
+### Developer Features:
+- **Quick Demo Game**: Instantly create a test game with sample players
+- **Save/Load Game**: Persist game state across page refreshes
+- **Reset Current Game**: Clear all scores without losing players
+- **Test Dice Combinations**: Quick buttons for common scoring scenarios
+- **Auto-restore**: Automatically loads saved games when in dev mode
+
+### Test Dice Combinations:
+- Yahtzee (all 1s)
+- Large Straight (1-5, 2-6)
+- Small Straight (1-4 with extras)
+- Full House (3+2 of different numbers)
+- Four of a Kind
+- Three of a Kind
 
 ## API Endpoints
 
