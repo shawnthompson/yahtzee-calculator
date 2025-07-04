@@ -1,14 +1,19 @@
 # Yahtzee Score Calculator
 
-A simple, beautiful web application to calculate Yahtzee scores while playing with family and friends. Built with Node.js, Express, and Docker for easy deployment.
+A simple, beautiful web application to calculate Yahtzee scores and manage multiple players during family game nights. Built with Node.js, Express, and Docker for easy deployment.
 
 ## Features
 
+- 🎮 **Multi-Player Support**: Add up to 4 players per game
 - 🎲 **Real-time Score Calculation**: Automatically calculates all possible Yahtzee scores
-- 🎯 **Interactive Dice Input**: Visual dice representation with easy input
+- 📊 **Individual Scorecards**: Track each player's scores separately
+- � **Live Leaderboard**: Real-time rankings updated after each score
+- �🎯 **Interactive Dice Input**: Visual dice representation with easy input
+- ✅ **Score Validation**: Prevents using the same category twice per player
 - 🎨 **Modern UI**: Clean, responsive design that works on all devices
 - 🚀 **Docker Ready**: Easy deployment with Docker and nginx
 - ⚡ **Fast & Lightweight**: Optimized for quick calculations during gameplay
+- 🔄 **Game Session Management**: Create and track multiple game sessions
 
 ## Yahtzee Categories Supported
 
@@ -65,10 +70,21 @@ A simple, beautiful web application to calculate Yahtzee scores while playing wi
 
 ## Usage
 
-1. **Enter your dice values** in the input fields (1-6)
-2. **Click "Calculate All Scores"** or the scores will update automatically
-3. **Use "Roll Random Dice"** to test with random values
-4. **View all possible scores** for your current dice combination
+### Setting Up a Game
+1. **Enter player names** (1-4 players) in the setup section
+2. **Click "Start Game"** to begin
+3. **Select current player** from the dropdown
+
+### Playing the Game
+1. **Enter your dice values** in the input fields (1-6) or use "Roll Random Dice"
+2. **Click "Calculate All Scores"** to see all possible scoring options
+3. **Click "Use" button** next to your chosen category to record the score
+4. **Switch players** and repeat for each turn
+
+### Viewing Results
+- **Player Scorecards**: See individual progress for each player
+- **Live Leaderboard**: Real-time rankings with detailed score breakdowns
+- **Final Scores**: Automatic calculation with upper section bonus (35 pts for 63+)
 
 ### Keyboard Shortcuts
 - **Enter**: Calculate all scores
@@ -76,9 +92,16 @@ A simple, beautiful web application to calculate Yahtzee scores while playing wi
 
 ## API Endpoints
 
+### Game Management
+- `POST /api/game/create`: Create a new game with players
+- `GET /api/game/:gameId`: Get current game state
+- `POST /api/game/:gameId/score`: Record a player's score for a category  
+- `GET /api/game/:gameId/leaderboard`: Get current player rankings
+
+### Score Calculation
 - `GET /`: Main application page
 - `POST /api/calculate`: Calculate score for a specific category
-- `GET /api/calculate-all`: Calculate all possible scores
+- `GET /api/calculate-all`: Calculate all possible scores for dice combination
 
 ## Development
 
