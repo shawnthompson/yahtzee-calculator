@@ -77,9 +77,10 @@ A simple, beautiful web application to calculate Yahtzee scores and manage multi
 
 ### Playing the Game
 1. **Enter your dice values** in the input fields (1-6) or use "Roll Random Dice"
-2. **Click "Calculate All Scores"** to see all possible scoring options
-3. **Click "Use" button** next to your chosen category to record the score
-4. **Switch players** and repeat for each turn
+2. **Use "Reset Dice"** to quickly clear all dice fields
+3. **Click "Calculate All Scores"** to see all possible scoring options
+4. **Click "Use" button** next to your chosen category to record the score
+5. **Switch players** and repeat for each turn
 
 ### Viewing Results
 - **Player Scorecards**: See individual progress for each player
@@ -89,6 +90,7 @@ A simple, beautiful web application to calculate Yahtzee scores and manage multi
 ### Keyboard Shortcuts
 - **Enter**: Calculate all scores
 - **R**: Roll random dice
+- **C**: Reset/clear dice
 
 ## API Endpoints
 

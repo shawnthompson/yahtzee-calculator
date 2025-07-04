@@ -20,6 +20,7 @@ function initializeApp() {
     const currentPlayerSelect = document.getElementById('current-player-select');
     const calculateAllBtn = document.getElementById('calculate-all');
     const rollDiceBtn = document.getElementById('roll-dice');
+    const resetDiceBtn = document.getElementById('reset-dice');
     
     const diceInputs = [
         document.getElementById('die1'),
@@ -34,6 +35,7 @@ function initializeApp() {
     newGameBtn.addEventListener('click', resetToSetup);
     calculateAllBtn.addEventListener('click', calculateAllScores);
     rollDiceBtn.addEventListener('click', rollRandomDice);
+    resetDiceBtn.addEventListener('click', resetDice);
     currentPlayerSelect.addEventListener('change', switchPlayer);
     
     // Dice input listeners
@@ -226,6 +228,23 @@ function rollRandomDice() {
     
     updateDiceDisplay();
     calculateAllScores();
+}
+
+function resetDice() {
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    diceInputs.forEach(input => {
+        input.value = '';
+    });
+    
+    updateDiceDisplay();
+    clearAllScores();
 }
 
 async function calculateAllScores() {
@@ -482,6 +501,8 @@ document.addEventListener('keydown', function(e) {
         calculateAllScores();
     } else if (e.key === 'r' || e.key === 'R') {
         rollRandomDice();
+    } else if (e.key === 'c' || e.key === 'C') {
+        resetDice();
     }
 });
 
