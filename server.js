@@ -1,12 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const APP_NAME = process.env.APP_NAME || 'Yahtzee Score Calculator';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN
+}));
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -127,5 +133,7 @@ app.get('/api/calculate-all', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Yahtzee Calculator server running on port ${PORT}`);
+  console.log(`🎲 ${APP_NAME} server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${NODE_ENV}`);
+  console.log(`📝 Access the app at: http://localhost:${PORT}`);
 });

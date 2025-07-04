@@ -34,13 +34,19 @@ A simple, beautiful web application to calculate Yahtzee scores while playing wi
    cd yahtzee-calculator
    ```
 
-2. **Build and run with Docker Compose:**
+2. **Configure environment variables (optional):**
+   ```bash
+   cp .env.example .env
+   # Edit .env to customize settings like port, etc.
+   ```
+
+3. **Build and run with Docker Compose:**
    ```bash
    docker-compose up -d
    ```
 
-3. **Access the application:**
-   Open your browser and go to `http://localhost`
+4. **Access the application:**
+   Open your browser and go to `http://localhost` (or the port specified in your .env file)
 
 ### Manual Setup
 
@@ -96,6 +102,23 @@ npm run dev
 ```
 
 This starts the server with nodemon for automatic restarts on file changes.
+
+## Environment Variables
+
+The application can be configured using environment variables. Copy `.env.example` to `.env` and modify as needed:
+
+```bash
+cp .env.example .env
+```
+
+Available environment variables:
+
+- `PORT`: Server port (default: 3001)
+- `NODE_ENV`: Environment mode (development/production)
+- `APP_NAME`: Application name displayed in logs
+- `APP_VERSION`: Application version
+- `CORS_ORIGIN`: CORS origin settings (* for all, or specific domain)
+- `LOG_LEVEL`: Logging level (info, debug, error)
 
 ## Docker Commands
 
