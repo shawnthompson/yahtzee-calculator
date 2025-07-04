@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yahtzee Score Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎲 Yahtzee Score Calculator</h1>
+            <p>Calculate your Yahtzee scores instantly!</p>
+        </header>
+
+        <main>
+            <section class="dice-input">
+                <h2>Enter Your Dice</h2>
+                <div class="dice-container">
+                    <input type="number" id="die1" min="1" max="6" placeholder="1">
+                    <input type="number" id="die2" min="1" max="6" placeholder="2">
+                    <input type="number" id="die3" min="1" max="6" placeholder="3">
+                    <input type="number" id="die4" min="1" max="6" placeholder="4">
+                    <input type="number" id="die5" min="1" max="6" placeholder="5">
+                </div>
+                <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>
+                <button id="roll-dice" class="btn btn-secondary">🎲 Roll Random Dice</button>
+            </section>
+
+            <section class="scores-section">
+                <h2>Scoring Options</h2>
+                <div class="scores-grid">
+                    <div class="score-category">
+                        <h3>Upper Section</h3>
+                        <div class="score-item">
+                            <span class="category-name">Ones</span>
+                            <span class="score" id="ones-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Twos</span>
+                            <span class="score" id="twos-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Threes</span>
+                            <span class="score" id="threes-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Fours</span>
+                            <span class="score" id="fours-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Fives</span>
+                            <span class="score" id="fives-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Sixes</span>
+                            <span class="score" id="sixes-score">0</span>
+                        </div>
+                    </div>
+
+                    <div class="score-category">
+                        <h3>Lower Section</h3>
+                        <div class="score-item">
+                            <span class="category-name">Three of a Kind</span>
+                            <span class="score" id="threeOfAKind-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Four of a Kind</span>
+                            <span class="score" id="fourOfAKind-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Full House</span>
+                            <span class="score" id="fullHouse-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Small Straight</span>
+                            <span class="score" id="smallStraight-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Large Straight</span>
+                            <span class="score" id="largeStraight-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Yahtzee</span>
+                            <span class="score" id="yahtzee-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="category-name">Chance</span>
+                            <span class="score" id="chance-score">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dice-display">
+                <h2>Current Dice</h2>
+                <div class="dice-visual" id="dice-visual">
+                    <div class="die">?</div>
+                    <div class="die">?</div>
+                    <div class="die">?</div>
+                    <div class="die">?</div>
+                    <div class="die">?</div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ for family game nights</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
