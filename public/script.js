@@ -472,8 +472,9 @@ async function useScore(event) {
         updateScorecardsDisplay();
         updateLeaderboard();
         
-        // Show success message
-        alert(`Score recorded: ${score} points for ${category}!`);
+        // Show success message with user-friendly category name
+        const displayName = categoryDisplayNames[category] || category;
+        alert(`Score recorded: ${score} points for ${displayName}!`);
         
     } catch (error) {
         console.error('Error recording score:', error);
@@ -809,6 +810,23 @@ document.addEventListener('keydown', function(e) {
         resetDice();
     }
 });
+
+// Category display names for user-friendly messages
+const categoryDisplayNames = {
+    'ones': 'Ones',
+    'twos': 'Twos',
+    'threes': 'Threes',
+    'fours': 'Fours',
+    'fives': 'Fives',
+    'sixes': 'Sixes',
+    'threeOfAKind': '3 of a Kind',
+    'fourOfAKind': '4 of a Kind',
+    'fullHouse': 'Full House',
+    'smallStraight': 'Small Straight',
+    'largeStraight': 'Large Straight',
+    'yahtzee': 'Yahtzee',
+    'chance': 'Chance'
+};
 
 // Add tooltips for scoring rules
 const tooltips = {
