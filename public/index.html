@@ -10,97 +10,156 @@
     <div class="container">
         <header>
             <h1>🎲 Yahtzee Score Calculator</h1>
-            <p>Calculate your Yahtzee scores instantly!</p>
+            <p>Calculate your Yahtzee scores and track multiple players!</p>
         </header>
 
         <main>
-            <section class="dice-input">
-                <h2>Enter Your Dice</h2>
-                <div class="dice-container">
-                    <input type="number" id="die1" min="1" max="6" placeholder="1">
-                    <input type="number" id="die2" min="1" max="6" placeholder="2">
-                    <input type="number" id="die3" min="1" max="6" placeholder="3">
-                    <input type="number" id="die4" min="1" max="6" placeholder="4">
-                    <input type="number" id="die5" min="1" max="6" placeholder="5">
-                </div>
-                <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>
-                <button id="roll-dice" class="btn btn-secondary">🎲 Roll Random Dice</button>
-            </section>
-
-            <section class="scores-section">
-                <h2>Scoring Options</h2>
-                <div class="scores-grid">
-                    <div class="score-category">
-                        <h3>Upper Section</h3>
-                        <div class="score-item">
-                            <span class="category-name">Ones</span>
-                            <span class="score" id="ones-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Twos</span>
-                            <span class="score" id="twos-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Threes</span>
-                            <span class="score" id="threes-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Fours</span>
-                            <span class="score" id="fours-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Fives</span>
-                            <span class="score" id="fives-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Sixes</span>
-                            <span class="score" id="sixes-score">0</span>
-                        </div>
+            <!-- Game Setup Section -->
+            <section class="game-setup" id="game-setup">
+                <h2>Setup New Game</h2>
+                <div class="player-setup">
+                    <div class="player-inputs">
+                        <input type="text" id="player1" placeholder="Player 1 Name" maxlength="20">
+                        <input type="text" id="player2" placeholder="Player 2 Name" maxlength="20">
+                        <input type="text" id="player3" placeholder="Player 3 Name (optional)" maxlength="20">
+                        <input type="text" id="player4" placeholder="Player 4 Name (optional)" maxlength="20">
                     </div>
-
-                    <div class="score-category">
-                        <h3>Lower Section</h3>
-                        <div class="score-item">
-                            <span class="category-name">Three of a Kind</span>
-                            <span class="score" id="threeOfAKind-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Four of a Kind</span>
-                            <span class="score" id="fourOfAKind-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Full House</span>
-                            <span class="score" id="fullHouse-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Small Straight</span>
-                            <span class="score" id="smallStraight-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Large Straight</span>
-                            <span class="score" id="largeStraight-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Yahtzee</span>
-                            <span class="score" id="yahtzee-score">0</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="category-name">Chance</span>
-                            <span class="score" id="chance-score">0</span>
-                        </div>
-                    </div>
+                    <button id="start-game" class="btn btn-primary">🎮 Start Game</button>
                 </div>
             </section>
 
-            <section class="dice-display">
-                <h2>Current Dice</h2>
-                <div class="dice-visual" id="dice-visual">
-                    <div class="die">?</div>
-                    <div class="die">?</div>
-                    <div class="die">?</div>
-                    <div class="die">?</div>
-                    <div class="die">?</div>
+            <!-- Game Play Section -->
+            <section class="game-play" id="game-play" style="display: none;">
+                <div class="game-header">
+                    <h2>Game in Progress</h2>
+                    <div class="current-player">
+                        <label for="current-player-select">Current Player:</label>
+                        <select id="current-player-select">
+                            <option value="">Select Player</option>
+                        </select>
+                    </div>
+                    <button id="new-game" class="btn btn-secondary">🔄 New Game</button>
                 </div>
+
+                <div class="game-content">
+                    <div class="left-panel">
+                        <div class="dice-input">
+                            <h3>Enter Your Dice</h3>
+                            <div class="dice-container">
+                                <input type="number" id="die1" min="1" max="6" placeholder="1">
+                                <input type="number" id="die2" min="1" max="6" placeholder="2">
+                                <input type="number" id="die3" min="1" max="6" placeholder="3">
+                                <input type="number" id="die4" min="1" max="6" placeholder="4">
+                                <input type="number" id="die5" min="1" max="6" placeholder="5">
+                            </div>
+                            <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>
+                            <button id="roll-dice" class="btn btn-secondary">🎲 Roll Random Dice</button>
+                        </div>
+
+                        <div class="dice-display">
+                            <h3>Current Dice</h3>
+                            <div class="dice-visual" id="dice-visual">
+                                <div class="die">?</div>
+                                <div class="die">?</div>
+                                <div class="die">?</div>
+                                <div class="die">?</div>
+                                <div class="die">?</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <div class="scores-section">
+                            <h3>Scoring Options</h3>
+                            <div class="scores-grid">
+                                <div class="score-category">
+                                    <h4>Upper Section</h4>
+                                    <div class="score-item" data-category="ones">
+                                        <span class="category-name">Ones</span>
+                                        <span class="score" id="ones-score">0</span>
+                                        <button class="use-score-btn" data-category="ones">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="twos">
+                                        <span class="category-name">Twos</span>
+                                        <span class="score" id="twos-score">0</span>
+                                        <button class="use-score-btn" data-category="twos">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="threes">
+                                        <span class="category-name">Threes</span>
+                                        <span class="score" id="threes-score">0</span>
+                                        <button class="use-score-btn" data-category="threes">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="fours">
+                                        <span class="category-name">Fours</span>
+                                        <span class="score" id="fours-score">0</span>
+                                        <button class="use-score-btn" data-category="fours">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="fives">
+                                        <span class="category-name">Fives</span>
+                                        <span class="score" id="fives-score">0</span>
+                                        <button class="use-score-btn" data-category="fives">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="sixes">
+                                        <span class="category-name">Sixes</span>
+                                        <span class="score" id="sixes-score">0</span>
+                                        <button class="use-score-btn" data-category="sixes">Use</button>
+                                    </div>
+                                </div>
+
+                                <div class="score-category">
+                                    <h4>Lower Section</h4>
+                                    <div class="score-item" data-category="threeOfAKind">
+                                        <span class="category-name">3 of a Kind</span>
+                                        <span class="score" id="threeOfAKind-score">0</span>
+                                        <button class="use-score-btn" data-category="threeOfAKind">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="fourOfAKind">
+                                        <span class="category-name">4 of a Kind</span>
+                                        <span class="score" id="fourOfAKind-score">0</span>
+                                        <button class="use-score-btn" data-category="fourOfAKind">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="fullHouse">
+                                        <span class="category-name">Full House</span>
+                                        <span class="score" id="fullHouse-score">0</span>
+                                        <button class="use-score-btn" data-category="fullHouse">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="smallStraight">
+                                        <span class="category-name">Small Straight</span>
+                                        <span class="score" id="smallStraight-score">0</span>
+                                        <button class="use-score-btn" data-category="smallStraight">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="largeStraight">
+                                        <span class="category-name">Large Straight</span>
+                                        <span class="score" id="largeStraight-score">0</span>
+                                        <button class="use-score-btn" data-category="largeStraight">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="yahtzee">
+                                        <span class="category-name">Yahtzee</span>
+                                        <span class="score" id="yahtzee-score">0</span>
+                                        <button class="use-score-btn" data-category="yahtzee">Use</button>
+                                    </div>
+                                    <div class="score-item" data-category="chance">
+                                        <span class="category-name">Chance</span>
+                                        <span class="score" id="chance-score">0</span>
+                                        <button class="use-score-btn" data-category="chance">Use</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Player Scorecards Section -->
+            <section class="player-scorecards" id="player-scorecards" style="display: none;">
+                <h2>Player Scorecards</h2>
+                <div id="scorecards-container"></div>
+            </section>
+
+            <!-- Leaderboard Section -->
+            <section class="leaderboard" id="leaderboard" style="display: none;">
+                <h2>🏆 Leaderboard</h2>
+                <div id="leaderboard-container"></div>
             </section>
         </main>
 

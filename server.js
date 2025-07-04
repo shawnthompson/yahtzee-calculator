@@ -78,6 +78,41 @@ const yahtzeeScoring = {
   chance: (dice) => dice.reduce((sum, d) => sum + d, 0)
 };
 
+// Player score calculation functions
+const calculateFinalScore = (scorecard) => {
+  const upperSection = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+  const lowerSection = ['threeOfAKind', 'fourOfAKind', 'fullHouse', 'smallStraight', 'largeStraight', 'yahtzee', 'chance'];
+  
+  // Calculate upper section total
+  const upperTotal = upperSection.reduce((sum, category) => {
+    return sum + (scorecard[category] || 0);
+  }, 0);
+  
+  // Upper section bonus (35 points if total >= 63)
+  const upperBonus = upperTotal >= 63 ? 35 : 0;
+  
+  // Calculate lower section total
+  const lowerTotal = lowerSection.reduce((sum, category) => {
+    return sum + (scorecard[category] || 0);
+  }, 0);
+  
+  // Total score
+  const totalScore = upperTotal + upperBonus + lowerTotal;
+  
+  return {
+    upperTotal,
+    upperBonus,
+    lowerTotal,
+    totalScore
+  };
+};
+
+// In-memory storage for game sessions (in production, use a database)
+let gameSessions = {};
+
+// Generate a simple game ID
+const generateGameId = () => Math.random().toString(36).substring(2, 8);
+
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -129,6 +164,109 @@ app.get('/api/calculate-all', (req, res) => {
     res.json({ scores, dice: diceArray });
   } catch (error) {
     res.status(500).json({ error: 'Server error calculating scores.' });
+  }
+});
+
+// Player and game management endpoints
+app.post('/api/game/create', (req, res) => {
+  try {
+    const { players } = req.body;
+    
+    if (!players || !Array.isArray(players) || players.length === 0) {
+      return res.status(400).json({ error: 'Must provide at least one player name' });
+    }
+    
+    const gameId = generateGameId();
+    const gameData = {
+      id: gameId,
+      players: players.map(name => ({
+        name: name.trim(),
+        scorecard: {},
+        finalScore: null
+      })),
+      createdAt: new Date().toISOString()
+    };
+    
+    gameSessions[gameId] = gameData;
+    res.json({ gameId, players: gameData.players });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error creating game.' });
+  }
+});
+
+app.get('/api/game/:gameId', (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const game = gameSessions[gameId];
+    
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    res.json(game);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error retrieving game.' });
+  }
+});
+
+app.post('/api/game/:gameId/score', (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerName, category, score } = req.body;
+    
+    const game = gameSessions[gameId];
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    const player = game.players.find(p => p.name === playerName);
+    if (!player) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    
+    // Update player's scorecard
+    player.scorecard[category] = score;
+    
+    // Calculate final score
+    player.finalScore = calculateFinalScore(player.scorecard);
+    
+    res.json({ 
+      playerName, 
+      category, 
+      score, 
+      finalScore: player.finalScore,
+      scorecard: player.scorecard 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error updating score.' });
+  }
+});
+
+app.get('/api/game/:gameId/leaderboard', (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const game = gameSessions[gameId];
+    
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    // Sort players by total score (descending)
+    const leaderboard = game.players
+      .filter(p => p.finalScore !== null)
+      .sort((a, b) => b.finalScore.totalScore - a.finalScore.totalScore)
+      .map((player, index) => ({
+        rank: index + 1,
+        name: player.name,
+        totalScore: player.finalScore.totalScore,
+        upperTotal: player.finalScore.upperTotal,
+        upperBonus: player.finalScore.upperBonus,
+        lowerTotal: player.finalScore.lowerTotal
+      }));
+    
+    res.json({ gameId, leaderboard });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error generating leaderboard.' });
   }
 });
 
