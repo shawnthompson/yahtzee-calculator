@@ -95,112 +95,21 @@ A simple, beautiful web application to calculate Yahtzee scores and manage multi
 - **Ctrl+S**: Save game (Developer Mode)
 - **Ctrl+L**: Load saved game (Developer Mode)
 
-## Developer Mode
+## Mobile Optimization
 
-For easier testing and development, enable Developer Mode by checking the "🔧 Developer Mode" checkbox on the setup page.
+The app is fully optimized for iPhone and mobile devices:
 
-### Developer Features:
-- **Quick Demo Game**: Instantly create a test game with sample players
-- **Save/Load Game**: Persist game state across page refreshes
-- **Reset Current Game**: Clear all scores without losing players
-- **Test Dice Combinations**: Quick buttons for common scoring scenarios
-- **Auto-restore**: Automatically loads saved games when in dev mode
+### Mobile Features:
+- **Numeric Keypad**: Dice inputs automatically show the number keyboard
+- **Input Validation**: Only accepts numbers 1-6
+- **Touch-Friendly**: Proper touch target sizes (48px minimum)
+- **Arrow Navigation**: Use arrow keys to move between dice inputs
+- **Auto-Focus**: Pressing Enter moves to the next dice input
+- **Paste Support**: Paste multiple dice values at once
+- **Visual Feedback**: Clear hover and active states for touch interaction
 
-### Test Dice Combinations:
-- Yahtzee (all 1s)
-- Large Straight (1-5, 2-6)
-- Small Straight (1-4 with extras)
-- Full House (3+2 of different numbers)
-- Four of a Kind
-- Three of a Kind
-
-## API Endpoints
-
-### Game Management
-- `POST /api/game/create`: Create a new game with players
-- `GET /api/game/:gameId`: Get current game state
-- `POST /api/game/:gameId/score`: Record a player's score for a category  
-- `GET /api/game/:gameId/leaderboard`: Get current player rankings
-
-### Score Calculation
-- `GET /`: Main application page
-- `POST /api/calculate`: Calculate score for a specific category
-- `GET /api/calculate-all`: Calculate all possible scores for dice combination
-
-## Development
-
-### Project Structure
-```
-yahtzee-calculator/
-├── public/
-│   ├── index.html      # Main HTML file
-│   ├── styles.css      # CSS styling
-│   └── script.js       # Frontend JavaScript
-├── server.js           # Express server
-├── package.json        # Node.js dependencies
-├── Dockerfile          # Docker configuration
-├── docker-compose.yml  # Docker Compose setup
-└── nginx.conf         # Nginx configuration
-```
-
-### Running in Development Mode
-```bash
-npm run dev
-```
-
-This starts the server with nodemon for automatic restarts on file changes.
-
-## Environment Variables
-
-The application can be configured using environment variables. Copy `.env.example` to `.env` and modify as needed:
-
-```bash
-cp .env.example .env
-```
-
-Available environment variables:
-
-- `PORT`: Server port (default: 3001)
-- `NODE_ENV`: Environment mode (development/production)
-- `APP_NAME`: Application name displayed in logs
-- `APP_VERSION`: Application version
-- `CORS_ORIGIN`: CORS origin settings (* for all, or specific domain)
-- `LOG_LEVEL`: Logging level (info, debug, error)
-
-## Docker Commands
-
-### Build and run with Docker Compose:
-```bash
-docker-compose up -d
-```
-
-### Stop the application:
-```bash
-docker-compose down
-```
-
-### View logs:
-```bash
-docker-compose logs -f
-```
-
-### Rebuild after changes:
-```bash
-docker-compose up -d --build
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-MIT License - feel free to use this for your own family game nights!
-
-## Made with ❤️ for Family Game Nights
-
-Perfect for keeping track of Yahtzee scores during family game time. No more manual calculations - just focus on having fun!
+### Mobile Tips:
+- Tap any dice input to bring up the numeric keypad
+- Use the arrow keys for quick navigation between dice
+- Invalid numbers (0, 7-9) are automatically rejected
+- Copy/paste works: "12345" will fill all dice at once

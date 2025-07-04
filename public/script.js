@@ -73,6 +73,11 @@ function initializeApp() {
     diceInputs.forEach(input => {
         input.addEventListener('input', updateDiceDisplay);
         input.addEventListener('input', debounce(calculateAllScores, 500));
+        
+        // Enhanced input validation for mobile
+        input.addEventListener('input', validateDiceInput);
+        input.addEventListener('keydown', handleDiceKeydown);
+        input.addEventListener('paste', handleDicePaste);
     });
     
     // Use score button listeners
@@ -279,6 +284,84 @@ function resetDice() {
     
     updateDiceDisplay();
     clearAllScores();
+}
+
+// Enhanced dice input validation for mobile
+function validateDiceInput(event) {
+    const input = event.target;
+    let value = input.value;
+    
+    // Remove any non-numeric characters except empty
+    value = value.replace(/[^1-6]/g, '');
+    
+    // Limit to single digit and ensure it's 1-6
+    if (value.length > 1) {
+        value = value.slice(-1); // Keep only the last digit
+    }
+    
+    // Ensure value is between 1-6
+    if (value && (parseInt(value) < 1 || parseInt(value) > 6)) {
+        value = '';
+    }
+    
+    input.value = value;
+}
+
+function handleDiceKeydown(event) {
+    const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight',
+        'ArrowUp', 'ArrowDown', '1', '2', '3', '4', '5', '6'
+    ];
+    
+    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if (event.ctrlKey || event.metaKey) {
+        return;
+    }
+    
+    // Prevent invalid keys
+    if (!allowedKeys.includes(event.key)) {
+        event.preventDefault();
+    }
+    
+    // Handle arrow key navigation between dice
+    if (event.key === 'ArrowRight' || event.key === 'Enter') {
+        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
+        if (currentIndex < 4) {
+            document.querySelectorAll('.dice-container input')[currentIndex + 1].focus();
+        }
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    }
+    
+    if (event.key === 'ArrowLeft') {
+        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
+        if (currentIndex > 0) {
+            document.querySelectorAll('.dice-container input')[currentIndex - 1].focus();
+        }
+    }
+}
+
+function handleDicePaste(event) {
+    event.preventDefault();
+    const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+    
+    // Extract valid dice numbers from pasted text
+    const validNumbers = pastedText.match(/[1-6]/g);
+    
+    if (validNumbers) {
+        const diceInputs = document.querySelectorAll('.dice-container input');
+        const startIndex = Array.from(diceInputs).indexOf(event.target);
+        
+        validNumbers.slice(0, 5 - startIndex).forEach((num, index) => {
+            if (startIndex + index < diceInputs.length) {
+                diceInputs[startIndex + index].value = num;
+            }
+        });
+        
+        updateDiceDisplay();
+        calculateAllScores();
+    }
 }
 
 async function calculateAllScores() {
@@ -754,3 +837,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Dice input validation for mobile
+function validateDiceInput(event) {
+    const input = event.target;
+    let value = input.value;
+    
+    // Remove any non-numeric characters except empty
+    value = value.replace(/[^1-6]/g, '');
+    
+    // Limit to single digit and ensure it's 1-6
+    if (value.length > 1) {
+        value = value.slice(-1); // Keep only the last digit
+    }
+    
+    // Ensure value is between 1-6
+    if (value && (parseInt(value) < 1 || parseInt(value) > 6)) {
+        value = '';
+    }
+    
+    input.value = value;
+}
+
+function handleDiceKeydown(event) {
+    const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight',
+        'ArrowUp', 'ArrowDown', '1', '2', '3', '4', '5', '6'
+    ];
+    
+    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if (event.ctrlKey || event.metaKey) {
+        return;
+    }
+    
+    // Prevent invalid keys
+    if (!allowedKeys.includes(event.key)) {
+        event.preventDefault();
+    }
+    
+    // Handle arrow key navigation between dice
+    if (event.key === 'ArrowRight' || event.key === 'Enter') {
+        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
+        if (currentIndex < 4) {
+            document.querySelectorAll('.dice-container input')[currentIndex + 1].focus();
+        }
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    }
+    
+    if (event.key === 'ArrowLeft') {
+        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
+        if (currentIndex > 0) {
+            document.querySelectorAll('.dice-container input')[currentIndex - 1].focus();
+        }
+    }
+}
+
+function handleDicePaste(event) {
+    event.preventDefault();
+    const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+    
+    // Extract valid dice numbers from pasted text
+    const validNumbers = pastedText.match(/[1-6]/g);
+    
+    if (validNumbers) {
+        const diceInputs = document.querySelectorAll('.dice-container input');
+        const startIndex = Array.from(diceInputs).indexOf(event.target);
+        
+        validNumbers.slice(0, 5 - startIndex).forEach((num, index) => {
+            if (startIndex + index < diceInputs.length) {
+                diceInputs[startIndex + index].value = num;
+            }
+        });
+        
+        updateDiceDisplay();
+        calculateAllScores();
+    }
+}

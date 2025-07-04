@@ -211,7 +211,14 @@ main {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+.dice-help {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #666;
+    font-style: italic;
 }
 
 .dice-container input {
@@ -223,16 +230,52 @@ main {
     border-radius: 10px;
     background: white;
     transition: all 0.3s ease;
+    
+    /* Mobile optimizations */
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    font-weight: bold;
+    user-select: none;
+    
+    /* Touch target size for mobile */
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Hide number input arrows on WebKit browsers */
+.dice-container input::-webkit-outer-spin-button,
+.dice-container input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide number input arrows on Firefox */
+.dice-container input[type=number] {
+    -moz-appearance: textfield;
 }
 
 .dice-container input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    transform: scale(1.05);
 }
 
 .dice-container input:hover {
     border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+/* Invalid input styling */
+.dice-container input:invalid {
+    border-color: #f44336;
+    background-color: #ffebee;
+}
+
+/* Active state for better mobile feedback */
+.dice-container input:active {
+    transform: scale(0.98);
+    border-color: var(--accent-color);
 }
 
 .btn {
@@ -534,15 +577,36 @@ footer p {
     
     .dice-container {
         flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .dice-container input {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        /* Ensure good touch targets on mobile */
+        min-height: 48px;
+        min-width: 48px;
     }
     
     .dice-visual {
         flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .die {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
     }
     
     .game-header {
         flex-direction: column;
         text-align: center;
+    }
+    
+    .game-actions {
+        justify-content: center;
     }
     
     header h1 {
@@ -551,5 +615,20 @@ footer p {
     
     .leaderboard-table {
         font-size: 14px;
+    }
+    
+    /* Better button spacing on mobile */
+    .btn {
+        margin: 3px;
+        padding: 10px 16px;
+    }
+    
+    .test-dice-buttons {
+        justify-content: center;
+    }
+    
+    .test-dice-btn {
+        font-size: 11px;
+        padding: 5px 10px;
     }
 }
