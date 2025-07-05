@@ -282,6 +282,60 @@
         </div>
     </div>
 
+    <!-- Score Confirmation Dialog -->
+    <div class="modal-overlay" id="score-confirmation-modal" role="dialog" aria-labelledby="score-modal-title" aria-modal="true" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="score-modal-title">Confirm Score</h3>
+                <button class="modal-close" id="close-score-modal" aria-label="Close score confirmation">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="score-confirmation">
+                    <div class="score-summary">
+                        <div class="current-dice-display">
+                            <h4>Your Dice:</h4>
+                            <div class="confirmation-dice" id="confirmation-dice">
+                                <!-- Dice will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="score-details">
+                            <h4 id="selected-category">Category</h4>
+                            <div class="score-breakdown">
+                                <div class="score-value">
+                                    <span class="score-label">Points:</span>
+                                    <span class="score-points" id="score-points">0</span>
+                                </div>
+                                <div class="score-description" id="score-description">
+                                    Score description will appear here
+                                </div>
+                            </div>
+                        </div>
+                        <div class="player-info">
+                            <div class="current-player">
+                                <strong id="confirmation-player">Player Name</strong>
+                            </div>
+                            <div class="round-info">
+                                <span id="rolls-used">Rolls used: 3/3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bonus-info-section" id="bonus-info-section" style="display: none;">
+                        <div class="bonus-alert">
+                            <i class="fas fa-star"></i>
+                            <span id="bonus-message">Bonus information</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-score" class="btn btn-tertiary">Cancel</button>
+                <button id="confirm-score" class="btn btn-primary">Confirm & Continue</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

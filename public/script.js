@@ -145,6 +145,9 @@ function initializeApp() {
     // Initialize die edit modal
     initializeDieEditModal();
     
+    // Initialize score confirmation modal
+    initializeScoreConfirmationModal();
+    
     // Initialize virtual dice display
     updateRollsDisplay();
     updateDiceFreezeDisplay();
@@ -745,6 +748,18 @@ async function useScore(event) {
     const score = currentScores[category] || 0;
     const dice = getDiceValues();
     
+    // Check if all dice have valid values
+    if (dice.some(d => d === 0)) {
+        alert('Please set all dice values before scoring!');
+        return;
+    }
+    
+    // Show score confirmation dialog
+    showScoreConfirmationDialog(category, score, dice);
+}
+
+// Submit score to server (called after confirmation)
+async function submitScore(category, score, dice) {
     try {
         const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
             method: 'POST',
@@ -778,27 +793,15 @@ async function useScore(event) {
         updateScorecardsDisplay();
         updateLeaderboard();
         
-        // Show success message with user-friendly category name
-        const displayName = categoryDisplayNames[category] || category;
-        let message = `Score recorded: ${data.score} points for ${displayName}!`;
-        
-        // Add bonus Yahtzee information
-        if (data.bonusYahtzee) {
-            if (data.joker) {
-                message += ` (Used as Yahtzee joker - Bonus +${data.bonusPoints || 100} points!)`;
-            } else {
-                message += ` (Bonus Yahtzee - +${data.bonusPoints || 100} points!)`;
-            }
-        }
-        
-        alert(message);
-        
         // Auto-switch to next player for smoother gameplay
         switchToNextPlayer();
+        
+        return data; // Return data for confirmation dialog
         
     } catch (error) {
         console.error('Error recording score:', error);
         alert('Error recording score. Please try again.');
+        throw error;
     }
 }
 
@@ -1743,4 +1746,267 @@ function toggleDieFreeze(dieIndex) {
     
     // Update sticky header
     updateStickyDiceDisplay();
+}
+
+// Score Confirmation Dialog Functions
+let pendingScoreData = null;
+
+function showScoreConfirmationDialog(category, score, dice) {
+    // Store the pending score data
+    pendingScoreData = { category, score, dice };
+    
+    const modal = document.getElementById('score-confirmation-modal');
+    const selectedCategory = document.getElementById('selected-category');
+    const scorePoints = document.getElementById('score-points');
+    const scoreDescription = document.getElementById('score-description');
+    const confirmationPlayer = document.getElementById('confirmation-player');
+    const rollsUsed = document.getElementById('rolls-used');
+    const confirmationDice = document.getElementById('confirmation-dice');
+    const bonusInfoSection = document.getElementById('bonus-info-section');
+    const bonusMessage = document.getElementById('bonus-message');
+    
+    // Update category display
+    selectedCategory.textContent = categoryDisplayNames[category] || category;
+    
+    // Update score display
+    scorePoints.textContent = score;
+    
+    // Update score description based on category
+    scoreDescription.textContent = getScoreDescription(category, score, dice);
+    
+    // Update player info
+    confirmationPlayer.textContent = currentPlayer;
+    rollsUsed.textContent = `Rolls used: ${3 - rollsRemainingInTurn}/3`;
+    
+    // Update dice display
+    updateConfirmationDiceDisplay(dice);
+    
+    // Check for bonus information
+    updateBonusInfo(category, score, dice);
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus on confirm button
+    document.getElementById('confirm-score').focus();
+}
+
+function updateConfirmationDiceDisplay(dice) {
+    const confirmationDice = document.getElementById('confirmation-dice');
+    confirmationDice.innerHTML = '';
+    
+    dice.forEach((value, index) => {
+        const die = document.createElement('div');
+        die.className = 'confirmation-die';
+        die.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
+        
+        if (diceFrozen[index]) {
+            die.classList.add('frozen');
+        }
+        
+        confirmationDice.appendChild(die);
+    });
+}
+
+function getScoreDescription(category, score, dice) {
+    const descriptions = {
+        'ones': `Sum of all 1s: ${dice.filter(d => d === 1).length} × 1`,
+        'twos': `Sum of all 2s: ${dice.filter(d => d === 2).length} × 2`,
+        'threes': `Sum of all 3s: ${dice.filter(d => d === 3).length} × 3`,
+        'fours': `Sum of all 4s: ${dice.filter(d => d === 4).length} × 4`,
+        'fives': `Sum of all 5s: ${dice.filter(d => d === 5).length} × 5`,
+        'sixes': `Sum of all 6s: ${dice.filter(d => d === 6).length} × 6`,
+        'threeOfAKind': score > 0 ? `Sum of all dice: ${dice.reduce((a, b) => a + b, 0)}` : 'No three of a kind found',
+        'fourOfAKind': score > 0 ? `Sum of all dice: ${dice.reduce((a, b) => a + b, 0)}` : 'No four of a kind found',
+        'fullHouse': score > 0 ? 'Three of one number + pair of another' : 'No full house found',
+        'smallStraight': score > 0 ? 'Four consecutive numbers' : 'No small straight found',
+        'largeStraight': score > 0 ? 'Five consecutive numbers' : 'No large straight found',
+        'yahtzee': score > 0 ? 'All five dice show the same number!' : 'No Yahtzee found',
+        'chance': `Sum of all dice: ${dice.reduce((a, b) => a + b, 0)}`
+    };
+    
+    return descriptions[category] || `Score: ${score} points`;
+}
+
+function updateBonusInfo(category, score, dice) {
+    const bonusInfoSection = document.getElementById('bonus-info-section');
+    const bonusMessage = document.getElementById('bonus-message');
+    
+    let showBonus = false;
+    let message = '';
+    
+    // Check for Yahtzee bonus
+    if (category === 'yahtzee' && score > 0 && currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard && player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0) {
+            showBonus = true;
+            message = 'Bonus Yahtzee! +100 points will be added to your score!';
+        }
+    }
+    
+    // Check for upper section bonus progress
+    if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(category)) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            const upperCategories = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+            let currentUpperTotal = 0;
+            upperCategories.forEach(cat => {
+                if (player.scorecard[cat] !== undefined) {
+                    currentUpperTotal += player.scorecard[cat];
+                }
+            });
+            
+            const projectedTotal = currentUpperTotal + score;
+            if (projectedTotal >= 63) {
+                showBonus = true;
+                message = `Upper section bonus achieved! You'll get +35 bonus points!`;
+            } else {
+                const remaining = 63 - projectedTotal;
+                const remainingCategories = upperCategories.filter(cat => 
+                    cat !== category && player.scorecard[cat] === undefined
+                ).length;
+                
+                if (remainingCategories > 0) {
+                    showBonus = true;
+                    message = `Upper section progress: ${remaining} more points needed for +35 bonus`;
+                }
+            }
+        }
+    }
+    
+    if (showBonus) {
+        bonusInfoSection.style.display = 'block';
+        bonusMessage.textContent = message;
+    } else {
+        bonusInfoSection.style.display = 'none';
+    }
+}
+
+function closeScoreConfirmationDialog() {
+    const modal = document.getElementById('score-confirmation-modal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    pendingScoreData = null;
+}
+
+async function confirmScore() {
+    if (!pendingScoreData) return;
+    
+    const { category, score, dice } = pendingScoreData;
+    
+    try {
+        const data = await submitScore(category, score, dice);
+        
+        // Close the modal
+        closeScoreConfirmationDialog();
+        
+        // Show success message
+        const displayName = categoryDisplayNames[category] || category;
+        let message = `Score recorded: ${data.score} points for ${displayName}!`;
+        
+        // Add bonus information
+        if (data.bonusYahtzee) {
+            if (data.joker) {
+                message += ` (Used as Yahtzee joker - Bonus +${data.bonusPoints || 100} points!)`;
+            } else {
+                message += ` (Bonus Yahtzee - +${data.bonusPoints || 100} points!)`;
+            }
+        }
+        
+        // Show a nice toast notification instead of alert
+        showSuccessToast(message);
+        
+    } catch (error) {
+        // Keep modal open if there was an error
+        console.error('Error confirming score:', error);
+    }
+}
+
+function showSuccessToast(message) {
+    // Create a toast notification
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 2000;
+        max-width: 400px;
+        font-weight: 500;
+        animation: slideInToast 0.3s ease;
+    `;
+    
+    // Add animation keyframes if not already added
+    if (!document.querySelector('#toast-animations')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animations';
+        style.textContent = `
+            @keyframes slideInToast {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutToast {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Remove toast after 4 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOutToast 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 4000);
+}
+
+function initializeScoreConfirmationModal() {
+    const modal = document.getElementById('score-confirmation-modal');
+    const closeBtn = document.getElementById('close-score-modal');
+    const cancelBtn = document.getElementById('cancel-score');
+    const confirmBtn = document.getElementById('confirm-score');
+    
+    // Close button handlers
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeScoreConfirmationDialog);
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeScoreConfirmationDialog);
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmScore);
+    }
+    
+    // Click outside to close
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeScoreConfirmationDialog();
+            }
+        });
+    }
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeScoreConfirmationDialog();
+        }
+    });
 }
