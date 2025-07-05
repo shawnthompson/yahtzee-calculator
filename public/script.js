@@ -476,10 +476,32 @@ async function useScore(event) {
         const displayName = categoryDisplayNames[category] || category;
         alert(`Score recorded: ${score} points for ${displayName}!`);
         
+        // Auto-switch to next player for smoother gameplay
+        switchToNextPlayer();
+        
     } catch (error) {
         console.error('Error recording score:', error);
         alert('Error recording score. Please try again.');
     }
+}
+
+function switchToNextPlayer() {
+    if (!currentGame || !currentPlayer) return;
+    
+    // Find current player index
+    const currentPlayerIndex = currentGame.players.findIndex(p => p.name === currentPlayer);
+    
+    // Calculate next player index (cycle back to 0 if at end)
+    const nextPlayerIndex = (currentPlayerIndex + 1) % currentGame.players.length;
+    const nextPlayer = currentGame.players[nextPlayerIndex];
+    
+    // Update the player selection
+    const playerSelect = document.getElementById('current-player-select');
+    playerSelect.value = nextPlayer.name;
+    
+    // Update current player and refresh UI
+    currentPlayer = nextPlayer.name;
+    switchPlayer();
 }
 
 function updateScorecardsDisplay() {
@@ -633,24 +655,43 @@ function hideDevModeFeatures() {
     });
 }
 
-function createQuickDemo() {
+async function createQuickDemo() {
     // Create a demo game with test players
     const demoPlayers = ['Alice', 'Bob', 'Charlie'];
     
-    // Simulate the API call for demo
-    currentGame = {
-        gameId: 'demo-' + Date.now(),
-        players: demoPlayers.map(name => ({
-            name: name,
-            scorecard: {},
-            finalScore: null
-        }))
-    };
-    
-    setupGamePlay();
-    
-    // Show success message
-    alert('Demo game created with players: ' + demoPlayers.join(', '));
+    try {
+        // Actually create the game on the server
+        const response = await fetch('/api/game/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ players: demoPlayers })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error creating demo game: ' + data.error);
+            return;
+        }
+        
+        currentGame = data;
+        setupGamePlay();
+        
+        // Auto-select first player for convenience
+        const playerSelect = document.getElementById('current-player-select');
+        playerSelect.value = demoPlayers[0];
+        currentPlayer = demoPlayers[0];
+        switchPlayer();
+        
+        // Show success message
+        alert('Demo game created with players: ' + demoPlayers.join(', '));
+        
+    } catch (error) {
+        console.error('Error creating demo game:', error);
+        alert('Error creating demo game. Please try again.');
+    }
 }
 
 function saveGameState() {
