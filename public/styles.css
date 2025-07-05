@@ -509,6 +509,48 @@ main {
     border-color: var(--primary-color);
 }
 
+.scorecard-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.scorecard-item:hover .scorecard-actions {
+    opacity: 1;
+}
+
+.edit-score-btn,
+.clear-score-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-score-btn:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.1);
+}
+
+.clear-score-btn:hover {
+    background-color: #ffebee;
+    transform: scale(1.1);
+}
+
+.edit-score-btn:active,
+.clear-score-btn:active {
+    transform: scale(0.95);
+}
+
 .bonus-tracker {
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -735,5 +777,25 @@ footer p {
     
     .bonus-info div:not(:first-child) {
         justify-content: center;
+    }
+    
+    /* Mobile styles for scorecard actions */
+    .scorecard-actions {
+        opacity: 1; /* Always visible on mobile */
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .edit-score-btn,
+    .clear-score-btn {
+        font-size: 14px;
+        min-width: 24px;
+        height: 24px;
+        margin: 1px 0;
+    }
+    
+    .scorecard-item {
+        flex-wrap: wrap;
+        align-items: center;
     }
 }

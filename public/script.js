@@ -561,6 +561,130 @@ function updateScorecardsDisplay() {
         const scorecard = createScorecardElement(player);
         container.appendChild(scorecard);
     });
+    
+    // Add event listeners for edit and clear buttons
+    document.querySelectorAll('.edit-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleEditScore);
+    });
+    
+    document.querySelectorAll('.clear-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleClearScore);
+    });
+}
+
+async function handleEditScore(event) {
+    const playerName = event.target.dataset.player;
+    const category = event.target.dataset.category;
+    const player = currentGame.players.find(p => p.name === playerName);
+    
+    if (!player) return;
+    
+    const currentScore = player.scorecard[category];
+    const displayName = categoryDisplayNames[category] || category;
+    
+    const newScore = prompt(
+        `Edit score for ${displayName} (${playerName}):\n\nCurrent score: ${currentScore}`,
+        currentScore
+    );
+    
+    if (newScore === null) return; // User cancelled
+    
+    const parsedScore = parseInt(newScore);
+    if (isNaN(parsedScore) || parsedScore < 0) {
+        alert('Please enter a valid score (0 or positive number).');
+        return;
+    }
+    
+    // Update the score on the server
+    try {
+        const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                category: category,
+                score: parsedScore
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error updating score: ' + data.error);
+            return;
+        }
+        
+        // Update the current game data
+        player.scorecard = data.scorecard;
+        player.finalScore = data.finalScore;
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        alert(`Score updated: ${parsedScore} points for ${displayName}!`);
+        
+    } catch (error) {
+        console.error('Error updating score:', error);
+        alert('Error updating score. Please try again.');
+    }
+}
+
+async function handleClearScore(event) {
+    const playerName = event.target.dataset.player;
+    const category = event.target.dataset.category;
+    const player = currentGame.players.find(p => p.name === playerName);
+    
+    if (!player) return;
+    
+    const displayName = categoryDisplayNames[category] || category;
+    const currentScore = player.scorecard[category];
+    
+    if (!confirm(`Clear ${displayName} score for ${playerName}?\n\nCurrent score: ${currentScore}\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    // Clear the score on the server
+    try {
+        const response = await fetch(`/api/game/${currentGame.gameId}/clear-score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                category: category
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error clearing score: ' + data.error);
+            return;
+        }
+        
+        // Update the current game data
+        player.scorecard = data.scorecard;
+        player.finalScore = data.finalScore;
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        // Update use score buttons if this is the current player
+        if (playerName === currentPlayer) {
+            updateUseScoreButtons(data.scorecard);
+        }
+        
+        alert(`${displayName} score cleared for ${playerName}!`);
+        
+    } catch (error) {
+        console.error('Error clearing score:', error);
+        alert('Error clearing score. Please try again.');
+    }
 }
 
 function createScorecardElement(player) {
@@ -605,6 +729,12 @@ function createScorecardElement(player) {
             <div class="scorecard-item ${isUsed ? 'used' : ''}">
                 <span>${category.display}</span>
                 <span>${isUsed ? score : '-'}</span>
+                ${isUsed ? `
+                    <div class="scorecard-actions">
+                        <button class="edit-score-btn" data-player="${player.name}" data-category="${category.name}" title="Edit score">✏️</button>
+                        <button class="clear-score-btn" data-player="${player.name}" data-category="${category.name}" title="Clear score">🗑️</button>
+                    </div>
+                ` : ''}
             </div>
         `;
     });

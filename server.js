@@ -242,6 +242,38 @@ app.post('/api/game/:gameId/score', (req, res) => {
   }
 });
 
+app.post('/api/game/:gameId/clear-score', (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerName, category } = req.body;
+    
+    const game = gameSessions[gameId];
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    const player = game.players.find(p => p.name === playerName);
+    if (!player) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    
+    // Remove the category from player's scorecard
+    delete player.scorecard[category];
+    
+    // Recalculate final score
+    player.finalScore = calculateFinalScore(player.scorecard);
+    
+    res.json({ 
+      playerName, 
+      category, 
+      finalScore: player.finalScore,
+      scorecard: player.scorecard 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error clearing score.' });
+  }
+});
+
 app.get('/api/game/:gameId/leaderboard', (req, res) => {
   try {
     const { gameId } = req.params;
