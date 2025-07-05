@@ -84,25 +84,41 @@
 
                 <div class="game-content">
                     <div class="left-panel">
-                        <div class="dice-input">
-                            <h3>Enter Your Dice</h3>
-                            <div class="dice-container">
-                                <input type="number" id="die1" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
-                                       aria-label="Die 1 value" aria-describedby="dice-help">
-                                <input type="number" id="die2" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
-                                       aria-label="Die 2 value" aria-describedby="dice-help">
-                                <input type="number" id="die3" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
-                                       aria-label="Die 3 value" aria-describedby="dice-help">
-                                <input type="number" id="die4" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
-                                       aria-label="Die 4 value" aria-describedby="dice-help">
-                                <input type="number" id="die5" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
-                                       aria-label="Die 5 value" aria-describedby="dice-help">
-                            </div>
+                        <div class="dice-display">
+                            <h3><i class="fas fa-dice"></i> Your Dice</h3>
                             <div class="dice-help" id="dice-help">
-                                <small>📱 Enter manually or roll dice • Click dice icons to freeze/unfreeze them • 3 rolls per turn</small>
+                                <small>🎲 Click any die to edit or lock/unlock • 3 rolls per turn</small>
                             </div>
-                            <button id="roll-dice" class="btn btn-secondary"><i class="fas fa-dice"></i> Roll Random Dice</button>
-                            <button id="reset-dice" class="btn btn-tertiary"><i class="fas fa-eraser"></i> Reset Dice</button>
+                            <div class="dice-visual" id="dice-visual">
+                                <button class="die" id="die-1" data-index="0" aria-label="Die 1, click to edit">
+                                    <i class="fas fa-question"></i>
+                                </button>
+                                <button class="die" id="die-2" data-index="1" aria-label="Die 2, click to edit">
+                                    <i class="fas fa-question"></i>
+                                </button>
+                                <button class="die" id="die-3" data-index="2" aria-label="Die 3, click to edit">
+                                    <i class="fas fa-question"></i>
+                                </button>
+                                <button class="die" id="die-4" data-index="3" aria-label="Die 4, click to edit">
+                                    <i class="fas fa-question"></i>
+                                </button>
+                                <button class="die" id="die-5" data-index="4" aria-label="Die 5, click to edit">
+                                    <i class="fas fa-question"></i>
+                                </button>
+                            </div>
+                            <div class="dice-actions">
+                                <button id="roll-dice" class="btn btn-secondary"><i class="fas fa-dice"></i> Roll Unlocked Dice</button>
+                                <button id="reset-dice" class="btn btn-tertiary"><i class="fas fa-eraser"></i> Reset All Dice</button>
+                            </div>
+                            
+                            <!-- Hidden inputs for backward compatibility -->
+                            <div style="display: none;">
+                                <input type="number" id="die1" min="1" max="6">
+                                <input type="number" id="die2" min="1" max="6">
+                                <input type="number" id="die3" min="1" max="6">
+                                <input type="number" id="die4" min="1" max="6">
+                                <input type="number" id="die5" min="1" max="6">
+                            </div>
                             
                             <!-- Developer Mode Test Dice -->
                             <div class="dev-mode-section" id="dev-test-dice" style="display: none;">
@@ -116,17 +132,6 @@
                                     <button class="btn btn-tertiary test-dice-btn" data-dice="4,4,4,4,2">4 of a Kind</button>
                                     <button class="btn btn-tertiary test-dice-btn" data-dice="5,5,5,2,6">3 of a Kind</button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="dice-display">
-                            <h3><i class="fas fa-dice"></i> Current Dice</h3>
-                            <div class="dice-visual" id="dice-visual">
-                                <div class="die"><i class="fas fa-question"></i></div>
-                                <div class="die"><i class="fas fa-question"></i></div>
-                                <div class="die"><i class="fas fa-question"></i></div>
-                                <div class="die"><i class="fas fa-question"></i></div>
-                                <div class="die"><i class="fas fa-question"></i></div>
                             </div>
                         </div>
                     </div>
@@ -234,6 +239,47 @@
         <footer>
             <p>Made with ❤️ for family game nights</p>
         </footer>
+    </div>
+
+    <!-- Die Edit Modal -->
+    <div class="modal-overlay" id="die-edit-modal" role="dialog" aria-labelledby="die-modal-title" aria-modal="true" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="die-modal-title">Edit Die</h3>
+                <button class="modal-close" id="close-die-modal" aria-label="Close die editor">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="die-editor">
+                    <div class="current-die-display">
+                        <div class="die large-die" id="modal-die-display">
+                            <i class="fas fa-question"></i>
+                        </div>
+                    </div>
+                    <div class="die-controls">
+                        <h4>Change Value:</h4>
+                        <div class="die-value-buttons">
+                            <button class="die-value-btn" data-value="1"><i class="fas fa-dice-one"></i></button>
+                            <button class="die-value-btn" data-value="2"><i class="fas fa-dice-two"></i></button>
+                            <button class="die-value-btn" data-value="3"><i class="fas fa-dice-three"></i></button>
+                            <button class="die-value-btn" data-value="4"><i class="fas fa-dice-four"></i></button>
+                            <button class="die-value-btn" data-value="5"><i class="fas fa-dice-five"></i></button>
+                            <button class="die-value-btn" data-value="6"><i class="fas fa-dice-six"></i></button>
+                        </div>
+                    </div>
+                    <div class="die-lock-control">
+                        <button id="toggle-die-lock" class="btn btn-secondary">
+                            <i class="fas fa-unlock"></i>
+                            <span id="lock-text">Lock Die</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-die-editor" class="btn btn-primary">Done</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

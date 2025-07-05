@@ -1,3 +1,54 @@
+// Category display names for user-friendly messages
+const categoryDisplayNames = {
+    'ones': 'Ones',
+    'twos': 'Twos',
+    'threes': 'Threes',
+    'fours': 'Fours',
+    'fives': 'Fives',
+    'sixes': 'Sixes',
+    'threeOfAKind': 'Three of a Kind',
+    'fourOfAKind': 'Four of a Kind',
+    'fullHouse': 'Full House',
+    'smallStraight': 'Small Straight',
+    'largeStraight': 'Large Straight',
+    'yahtzee': 'Yahtzee',
+    'chance': 'Chance'
+};
+
+// Utility function for screen reader announcements
+function announceToScreenReader(message) {
+    // Create a temporary element for screen reader announcements
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.style.position = 'absolute';
+    announcement.style.left = '-10000px';
+    announcement.style.width = '1px';
+    announcement.style.height = '1px';
+    announcement.style.overflow = 'hidden';
+    
+    document.body.appendChild(announcement);
+    announcement.textContent = message;
+    
+    // Remove the announcement after a short delay
+    setTimeout(() => {
+        document.body.removeChild(announcement);
+    }, 1000);
+}
+
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Yahtzee Score Calculator with Player Management
 
 let currentGame = null;
@@ -91,10 +142,8 @@ function initializeApp() {
         btn.addEventListener('click', useScore);
     });
     
-    // Virtual dice click listeners for freezing
-    document.querySelectorAll('.dice-visual .die').forEach((die, index) => {
-        die.addEventListener('click', () => toggleDiceFreeze(index));
-    });
+    // Initialize die edit modal
+    initializeDieEditModal();
     
     // Initialize virtual dice display
     updateRollsDisplay();
@@ -298,6 +347,8 @@ function updateDiceDisplay() {
     
     diceElements.forEach((die, index) => {
         const value = dice[index];
+        
+        // Update die value and styling
         if (value > 0) {
             die.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
             die.style.backgroundColor = '#4CAF50';
@@ -307,7 +358,17 @@ function updateDiceDisplay() {
             die.style.backgroundColor = 'white';
             die.style.color = '#333';
         }
+        
+        // Update frozen state
+        if (diceFrozen[index]) {
+            die.classList.add('frozen');
+        } else {
+            die.classList.remove('frozen');
+        }
     });
+    
+    // Re-attach die modal event listeners after updating innerHTML
+    attachDieModalListeners();
     
     // Update use score buttons to handle multiple Yahtzees
     if (currentPlayer && currentGame) {
@@ -1461,166 +1522,225 @@ function loadTestDice(event) {
     calculateAllScores();
 }
 
-// Enhanced keyboard shortcuts for dev mode
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        calculateAllScores();
-    } else if (e.key === 'r' || e.key === 'R') {
-        rollRandomDice();
-    } else if (e.key === 'c' || e.key === 'C') {
-        resetDice();
-    } else if (devMode && e.key === 's' && e.ctrlKey) {
-        e.preventDefault();
-        saveGameState();
-    } else if (devMode && e.key === 'l' && e.ctrlKey) {
-        e.preventDefault();
-        loadSavedGame();
-    }
-});
+// Die edit modal functionality
+let currentEditingDie = null;
 
-// Debounce function to limit API calls
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        calculateAllScores();
-    } else if (e.key === 'r' || e.key === 'R') {
-        rollRandomDice();
-    } else if (e.key === 'c' || e.key === 'C') {
-        resetDice();
-    }
-});
-
-// Category display names for user-friendly messages
-const categoryDisplayNames = {
-    'ones': 'Ones',
-    'twos': 'Twos',
-    'threes': 'Threes',
-    'fours': 'Fours',
-    'fives': 'Fives',
-    'sixes': 'Sixes',
-    'threeOfAKind': '3 of a Kind',
-    'fourOfAKind': '4 of a Kind',
-    'fullHouse': 'Full House',
-    'smallStraight': 'Small Straight',
-    'largeStraight': 'Large Straight',
-    'yahtzee': 'Yahtzee',
-    'chance': 'Chance'
-};
-
-// Add tooltips for scoring rules
-const tooltips = {
-    'ones': 'Sum of all ones',
-    'twos': 'Sum of all twos',
-    'threes': 'Sum of all threes',
-    'fours': 'Sum of all fours',
-    'fives': 'Sum of all fives',
-    'sixes': 'Sum of all sixes',
-    'threeOfAKind': 'Sum of all dice if 3 or more of same number',
-    'fourOfAKind': 'Sum of all dice if 4 or more of same number',
-    'fullHouse': '25 points for 3 of one number and 2 of another',
-    'smallStraight': '30 points for 4 consecutive numbers',
-    'largeStraight': '40 points for 5 consecutive numbers',
-    'yahtzee': '50 points for all 5 dice the same',
-    'chance': 'Sum of all dice'
-};
-
-// Add tooltips to score items
-document.addEventListener('DOMContentLoaded', function() {
-    Object.keys(tooltips).forEach(category => {
-        const scoreItem = document.querySelector(`[data-category="${category}"]`);
-        if (scoreItem) {
-            scoreItem.title = tooltips[category];
-            scoreItem.style.cursor = 'help';
+function attachDieModalListeners() {
+    // Add click listeners to dice
+    const diceElements = document.querySelectorAll('.dice-visual .die');
+    
+    diceElements.forEach((die, index) => {
+        // Remove existing listeners to avoid duplicates
+        if (die._modalClickHandler) {
+            die.removeEventListener('click', die._modalClickHandler);
         }
-    });
-});
-
-// Dice input validation for mobile
-function validateDiceInput(event) {
-    const input = event.target;
-    let value = input.value;
-    
-    // Remove any non-numeric characters except empty
-    value = value.replace(/[^1-6]/g, '');
-    
-    // Limit to single digit and ensure it's 1-6
-    if (value.length > 1) {
-        value = value.slice(-1); // Keep only the last digit
-    }
-    
-    // Ensure value is between 1-6
-    if (value && (parseInt(value) < 1 || parseInt(value) > 6)) {
-        value = '';
-    }
-    
-    input.value = value;
-}
-
-function handleDiceKeydown(event) {
-    const allowedKeys = [
-        'Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight',
-        'ArrowUp', 'ArrowDown', '1', '2', '3', '4', '5', '6'
-    ];
-    
-    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-    if (event.ctrlKey || event.metaKey) {
-        return;
-    }
-    
-    // Prevent invalid keys
-    if (!allowedKeys.includes(event.key)) {
-        event.preventDefault();
-    }
-    
-    // Handle arrow key navigation between dice
-    if (event.key === 'ArrowRight' || event.key === 'Enter') {
-        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
-        if (currentIndex < 4) {
-            document.querySelectorAll('.dice-container input')[currentIndex + 1].focus();
-        }
-        if (event.key === 'Enter') {
-            event.preventDefault();
-        }
-    }
-    
-    if (event.key === 'ArrowLeft') {
-        const currentIndex = Array.from(document.querySelectorAll('.dice-container input')).indexOf(event.target);
-        if (currentIndex > 0) {
-            document.querySelectorAll('.dice-container input')[currentIndex - 1].focus();
-        }
-    }
-}
-
-function handleDicePaste(event) {
-    event.preventDefault();
-    const pastedText = (event.clipboardData || window.clipboardData).getData('text');
-    
-    // Extract valid dice numbers from pasted text
-    const validNumbers = pastedText.match(/[1-6]/g);
-    
-    if (validNumbers) {
-        const diceInputs = document.querySelectorAll('.dice-container input');
-        const startIndex = Array.from(diceInputs).indexOf(event.target);
         
-        validNumbers.slice(0, 5 - startIndex).forEach((num, index) => {
-            if (startIndex + index < diceInputs.length) {
-                diceInputs[startIndex + index].value = num;
+        // Create and store the click handler
+        die._modalClickHandler = () => {
+            openDieEditModal(index);
+        };
+        
+        die.addEventListener('click', die._modalClickHandler);
+    });
+}
+
+function initializeDieEditModal() {
+    console.log('Initializing die edit modal...');
+    const modal = document.getElementById('die-edit-modal');
+    const closeBtn = document.getElementById('close-die-modal');
+    const doneBtn = document.getElementById('close-die-editor');
+    const toggleLockBtn = document.getElementById('toggle-die-lock');
+    
+    console.log('Modal elements:', { modal: !!modal, closeBtn: !!closeBtn, doneBtn: !!doneBtn, toggleLockBtn: !!toggleLockBtn });
+    
+    // Initial attachment of die listeners
+    attachDieModalListeners();
+    
+    // Modal close handlers
+    if (closeBtn) {
+        console.log('Adding close button listener');
+        closeBtn.addEventListener('click', (e) => {
+            console.log('Close button clicked');
+            closeDieEditModal();
+        });
+    }
+    if (doneBtn) {
+        console.log('Adding done button listener');
+        doneBtn.addEventListener('click', (e) => {
+            console.log('Done button clicked');
+            closeDieEditModal();
+        });
+    }
+    
+    // Click outside to close
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeDieEditModal();
             }
         });
-        
-        updateDiceDisplay();
-        calculateAllScores();
     }
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeDieEditModal();
+        }
+    });
+    
+    // Die value buttons
+    const dieValueButtons = document.querySelectorAll('.die-value-btn');
+    console.log('Found die value buttons:', dieValueButtons.length);
+    dieValueButtons.forEach((btn, index) => {
+        console.log(`Adding listener to die value button ${index + 1}`);
+        btn.addEventListener('click', (e) => {
+            console.log('Die value button clicked:', e.currentTarget.dataset.value);
+            const value = parseInt(e.currentTarget.dataset.value);
+            if (currentEditingDie !== null) {
+                setDieValue(currentEditingDie, value);
+            }
+        });
+    });
+    
+    // Lock toggle
+    if (toggleLockBtn) {
+        console.log('Adding lock toggle listener');
+        toggleLockBtn.addEventListener('click', (e) => {
+            console.log('Lock toggle clicked');
+            if (currentEditingDie !== null) {
+                toggleDieFreeze(currentEditingDie);
+            }
+        });
+    }
+}
+
+function openDieEditModal(dieIndex) {
+    currentEditingDie = dieIndex;
+    const modal = document.getElementById('die-edit-modal');
+    const modalDieDisplay = document.getElementById('modal-die-display');
+    const lockBtn = document.getElementById('toggle-die-lock');
+    const lockText = document.getElementById('lock-text');
+    const lockIcon = lockBtn.querySelector('i');
+    
+    // Update modal title
+    document.getElementById('die-modal-title').textContent = `Edit Die ${dieIndex + 1}`;
+    
+    // Update die display in modal
+    const currentValue = getDiceValues()[dieIndex];
+    if (currentValue > 0) {
+        modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(currentValue)}"></i>`;
+        modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
+        modalDieDisplay.style.color = 'white';
+    } else {
+        modalDieDisplay.innerHTML = '<i class="fas fa-question"></i>';
+        modalDieDisplay.style.backgroundColor = 'white';
+        modalDieDisplay.style.color = '#333';
+    }
+    
+    // Update lock button
+    if (diceFrozen[dieIndex]) {
+        lockBtn.classList.add('locked');
+        lockIcon.className = 'fas fa-lock';
+        lockText.textContent = 'Unlock Die';
+    } else {
+        lockBtn.classList.remove('locked');
+        lockIcon.className = 'fas fa-unlock';
+        lockText.textContent = 'Lock Die';
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    // Focus management
+    lockBtn.focus();
+}
+
+function closeDieEditModal() {
+    console.log('closeDieEditModal called');
+    const modal = document.getElementById('die-edit-modal');
+    const editingDieIndex = currentEditingDie; // Store before clearing
+    
+    console.log('Modal element:', modal);
+    console.log('Current modal display:', modal ? modal.style.display : 'modal not found');
+    
+    if (modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        currentEditingDie = null;
+        
+        // Return focus to the die that was being edited
+        if (editingDieIndex !== null) {
+            const dieElement = document.getElementById(`die-${editingDieIndex + 1}`);
+            if (dieElement) {
+                dieElement.focus();
+            }
+        }
+        console.log('Modal closed successfully');
+    } else {
+        console.error('Modal element not found');
+    }
+}
+
+function setDieValue(dieIndex, value) {
+    if (dieIndex === null) return;
+    
+    // Update the hidden input
+    const hiddenInput = document.getElementById(`die${dieIndex + 1}`);
+    hiddenInput.value = value;
+    
+    // Update the visual display
+    updateDiceDisplay();
+    
+    // Update modal display
+    const modalDieDisplay = document.getElementById('modal-die-display');
+    modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
+    modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
+    modalDieDisplay.style.color = 'white';
+    
+    // Calculate scores
+    calculateAllScores();
+    
+    // Update sticky header if visible
+    updateStickyDiceDisplay();
+}
+
+function toggleDieFreeze(dieIndex) {
+    if (dieIndex === null) return;
+    
+    diceFrozen[dieIndex] = !diceFrozen[dieIndex];
+    
+    // Update main die display
+    updateDiceDisplay();
+    
+    // Update modal display
+    const modalDieDisplay = document.getElementById('modal-die-display');
+    const currentValue = getDiceValues()[dieIndex];
+    if (currentValue > 0) {
+        modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
+    }
+    
+    // Update lock button in modal
+    const lockBtn = document.getElementById('toggle-die-lock');
+    const lockText = document.getElementById('lock-text');
+    const lockIcon = lockBtn.querySelector('i');
+    
+    if (diceFrozen[dieIndex]) {
+        lockBtn.classList.add('locked');
+        lockIcon.className = 'fas fa-lock';
+        lockText.textContent = 'Unlock Die';
+        announceToScreenReader(`Die ${dieIndex + 1} locked`);
+    } else {
+        lockBtn.classList.remove('locked');
+        lockIcon.className = 'fas fa-unlock';
+        lockText.textContent = 'Lock Die';
+        announceToScreenReader(`Die ${dieIndex + 1} unlocked`);
+    }
+    
+    // Update sticky header
+    updateStickyDiceDisplay();
 }

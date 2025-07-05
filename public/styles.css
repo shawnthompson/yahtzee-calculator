@@ -894,11 +894,210 @@ footer p {
     box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
 
-/* Responsive player tabs */
+/* Enhanced Dice Actions */
+.dice-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.dice-actions .btn {
+    min-width: 140px;
+}
+
+/* Die Edit Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 400px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 20px 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 1.3em;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 10px 20px 20px;
+    text-align: center;
+}
+
+.die-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.current-die-display {
+    display: flex;
+    justify-content: center;
+}
+
+.large-die {
+    width: 80px;
+    height: 80px;
+    font-size: 36px;
+    border-width: 3px;
+}
+
+.die-controls h4 {
+    text-align: center;
+    margin-bottom: 12px;
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+.die-value-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 240px;
+}
+
+.die-value-btn {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+}
+
+.die-value-btn:hover {
+    border-color: var(--primary-color);
+    background: #f8f9fa;
+    transform: scale(1.05);
+}
+
+.die-value-btn:active {
+    transform: scale(0.95);
+}
+
+.die-lock-control {
+    width: 100%;
+}
+
+.die-lock-control .btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    padding: 12px;
+}
+
+.die-lock-control .btn.locked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.die-lock-control .btn.locked:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+
+/* Make dice buttons look like dice but behave like buttons */
+.die {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Ensure dice maintain their visual appearance */
+.die.frozen {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+}
+
 @media (max-width: 768px) {
-    .player-tab {
-        padding: 8px 16px;
-        font-size: 14px;
-        min-width: 80px;
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .die-value-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 160px;
+    }
+    
+    .large-die {
+        width: 70px;
+        height: 70px;
+        font-size: 32px;
     }
 }
