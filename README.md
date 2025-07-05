@@ -113,3 +113,32 @@ The app is fully optimized for iPhone and mobile devices:
 - Use the arrow keys for quick navigation between dice
 - Invalid numbers (0, 7-9) are automatically rejected
 - Copy/paste works: "12345" will fill all dice at once
+
+## Environment Variables
+
+The application uses the following environment variables for configuration:
+
+### Port Configuration
+- `YAHTZEE_PORT`: The port number for the Yahtzee calculator server (default: 3001)
+  - Uses a unique name to avoid conflicts with other services
+  - Especially useful when running alongside media servers or other applications
+
+### Application Configuration
+- `NODE_ENV`: Environment mode (development/production)
+- `DEV_MODE`: Enable/disable developer features (true/false)
+- `APP_NAME`: Application name displayed in the UI
+- `APP_VERSION`: Application version
+- `CORS_ORIGIN`: CORS configuration (* for all origins or specific domain)
+- `LOG_LEVEL`: Logging level (info, debug, error)
+
+### Setup Instructions
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` with your preferred settings
+3. The unique `YAHTZEE_PORT` name prevents conflicts with other services in your environment
+4. Start the application:
+   ```bash
+   npm start
+   ```
