@@ -546,7 +546,8 @@ main {
 }
 
 .edit-score-btn,
-.clear-score-btn {
+.clear-score-btn,
+.add-score-btn {
     background: none;
     border: none;
     font-size: 12px;
@@ -571,8 +572,14 @@ main {
     transform: scale(1.1);
 }
 
+.add-score-btn:hover {
+    background-color: #e8f5e8;
+    transform: scale(1.1);
+}
+
 .edit-score-btn:active,
-.clear-score-btn:active {
+.clear-score-btn:active,
+.add-score-btn:active {
     transform: scale(0.95);
 }
 

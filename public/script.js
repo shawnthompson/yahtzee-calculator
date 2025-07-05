@@ -756,13 +756,17 @@ function updateScorecardsDisplay() {
         container.appendChild(scorecard);
     });
     
-    // Add event listeners for edit and clear buttons
+    // Add event listeners for edit, clear, and add score buttons
     document.querySelectorAll('.edit-score-btn').forEach(btn => {
         btn.addEventListener('click', handleEditScore);
     });
     
     document.querySelectorAll('.clear-score-btn').forEach(btn => {
         btn.addEventListener('click', handleClearScore);
+    });
+    
+    document.querySelectorAll('.add-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleAddScore);
     });
 }
 
@@ -881,6 +885,136 @@ async function handleClearScore(event) {
     }
 }
 
+async function handleAddScore(event) {
+    const playerName = event.target.dataset.player;
+    const category = event.target.dataset.category;
+    const player = currentGame.players.find(p => p.name === playerName);
+    
+    if (!player) return;
+    
+    // Check if category already has a score
+    if (player.scorecard[category] !== undefined) {
+        alert('This category already has a score. Use the edit button to modify it.');
+        return;
+    }
+    
+    const displayName = categoryDisplayNames[category] || category;
+    
+    // Define set values for specific categories
+    const setValues = {
+        'threeOfAKind': 'Sum of all dice',
+        'fourOfAKind': 'Sum of all dice', 
+        'fullHouse': 25,
+        'smallStraight': 30,
+        'largeStraight': 40,
+        'yahtzee': 50,
+        'chance': 'Sum of all dice'
+    };
+    
+    // Define editable categories (upper section + chance)
+    const editableCategories = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes', 'chance'];
+    
+    let promptMessage = `Add score for ${displayName} (${playerName}):\n\n`;
+    let newScore;
+    
+    if (editableCategories.includes(category)) {
+        // Allow manual entry for upper section and chance
+        promptMessage += 'Enter the score you want to add:';
+        newScore = prompt(promptMessage, '');
+        
+        if (newScore === null) return; // User cancelled
+        
+        if (newScore.trim() === '') {
+            alert('Please enter a score or cancel.');
+            return;
+        }
+        
+        const parsedScore = parseInt(newScore);
+        if (isNaN(parsedScore) || parsedScore < 0) {
+            alert('Please enter a valid score (0 or positive number).');
+            return;
+        }
+        
+        await addScoreToServer(playerName, category, parsedScore);
+        
+    } else {
+        // For categories with set values, show the set value and ask for confirmation
+        const setValue = setValues[category];
+        if (setValue === 'Sum of all dice') {
+            promptMessage += `This category uses the sum of all dice.\nEnter the sum of your dice:`;
+            newScore = prompt(promptMessage, '');
+            
+            if (newScore === null) return; // User cancelled
+            
+            if (newScore.trim() === '') {
+                alert('Please enter the sum of your dice or cancel.');
+                return;
+            }
+            
+            const parsedScore = parseInt(newScore);
+            if (isNaN(parsedScore) || parsedScore < 5 || parsedScore > 30) {
+                alert('Please enter a valid sum of dice (5-30).');
+                return;
+            }
+            
+            await addScoreToServer(playerName, category, parsedScore);
+            
+        } else {
+            // Fixed value categories
+            promptMessage += `This category has a fixed value of ${setValue} points.\nAdd this score?`;
+            if (confirm(promptMessage)) {
+                await addScoreToServer(playerName, category, setValue);
+            }
+        }
+    }
+}
+
+async function addScoreToServer(playerName, category, score) {
+    try {
+        const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                category: category,
+                score: score
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error adding score: ' + data.error);
+            return;
+        }
+        
+        // Update the current game data
+        const player = currentGame.players.find(p => p.name === playerName);
+        if (player) {
+            player.scorecard = data.scorecard;
+            player.finalScore = data.finalScore;
+        }
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        // Update use score buttons if this is the current player
+        if (playerName === currentPlayer) {
+            updateUseScoreButtons(data.scorecard);
+        }
+        
+        const displayName = categoryDisplayNames[category] || category;
+        alert(`Score added: ${score} points for ${displayName}!`);
+        
+    } catch (error) {
+        console.error('Error adding score:', error);
+        alert('Error adding score. Please try again.');
+    }
+}
+
 function createScorecardElement(player) {
     const scorecard = document.createElement('div');
     scorecard.className = 'scorecard';
@@ -928,7 +1062,11 @@ function createScorecardElement(player) {
                         <button class="edit-score-btn" data-player="${player.name}" data-category="${category.name}" title="Edit score">✏️</button>
                         <button class="clear-score-btn" data-player="${player.name}" data-category="${category.name}" title="Clear score">🗑️</button>
                     </div>
-                ` : ''}
+                ` : `
+                    <div class="scorecard-actions">
+                        <button class="add-score-btn" data-player="${player.name}" data-category="${category.name}" title="Add score">➕</button>
+                    </div>
+                `}
             </div>
         `;
     });
