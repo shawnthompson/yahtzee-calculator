@@ -502,6 +502,9 @@ function switchToNextPlayer() {
     // Update current player and refresh UI
     currentPlayer = nextPlayer.name;
     switchPlayer();
+    
+    // Reset dice for the new player's turn
+    resetDice();
 }
 
 function updateScorecardsDisplay() {
