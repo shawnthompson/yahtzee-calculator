@@ -34,7 +34,6 @@ function initializeApp() {
     const resetGameBtn = document.getElementById('reset-game');
     const saveGameBtn = document.getElementById('save-game');
     const playerTabsContainer = document.getElementById('player-tabs');
-    const calculateAllBtn = document.getElementById('calculate-all');
     const rollDiceBtn = document.getElementById('roll-dice');
     const resetDiceBtn = document.getElementById('reset-dice');
     
@@ -57,7 +56,6 @@ function initializeApp() {
     newGameBtn.addEventListener('click', resetToSetup);
     resetGameBtn.addEventListener('click', resetCurrentGame);
     saveGameBtn.addEventListener('click', saveGameState);
-    calculateAllBtn.addEventListener('click', calculateAllScores);
     rollDiceBtn.addEventListener('click', rollRandomDice);
     resetDiceBtn.addEventListener('click', resetDice);
     
