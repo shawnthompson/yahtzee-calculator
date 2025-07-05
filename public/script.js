@@ -541,6 +541,18 @@ function createScorecardElement(player) {
     
     let html = `<h3>${player.name}</h3><div class="scorecard-grid">`;
     
+    // Calculate upper section totals for bonus tracking
+    const upperCategories = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+    let upperTotal = 0;
+    let upperUsedCount = 0;
+    
+    upperCategories.forEach(cat => {
+        if (player.scorecard[cat] !== undefined) {
+            upperTotal += player.scorecard[cat];
+            upperUsedCount++;
+        }
+    });
+    
     categories.forEach(category => {
         const score = player.scorecard[category.name];
         const isUsed = score !== undefined;
@@ -554,6 +566,28 @@ function createScorecardElement(player) {
     });
     
     html += '</div>';
+    
+    // Add upper section bonus tracking
+    const bonusThreshold = 63;
+    const bonusAmount = 35;
+    const pointsNeeded = Math.max(0, bonusThreshold - upperTotal);
+    const remainingCategories = 6 - upperUsedCount;
+    
+    if (upperUsedCount < 6) {
+        html += `
+            <div class="bonus-tracker">
+                <h4>Upper Section Bonus</h4>
+                <div class="bonus-info">
+                    <div>Current: ${upperTotal}/63 points</div>
+                    <div>Need: ${pointsNeeded} more points</div>
+                    <div>Bonus: 35 points (if 63+ achieved)</div>
+                    ${remainingCategories > 0 ? `<div>Categories left: ${remainingCategories}</div>` : ''}
+                    ${pointsNeeded > 0 && remainingCategories > 0 ? 
+                        `<div>Average needed: ${Math.ceil(pointsNeeded / remainingCategories)} per category</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
     
     if (player.finalScore) {
         html += `
