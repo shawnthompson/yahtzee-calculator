@@ -5,6 +5,10 @@ let currentPlayer = null;
 let currentScores = {};
 let devMode = false;
 
+// Virtual dice enhancement
+let diceFrozen = [false, false, false, false, false];
+let rollsRemainingInTurn = 3;
+
 // localStorage keys
 const STORAGE_KEYS = {
     GAME_STATE: 'yahtzee_game_state',
@@ -90,6 +94,15 @@ function initializeApp() {
         btn.addEventListener('click', useScore);
     });
     
+    // Virtual dice click listeners for freezing
+    document.querySelectorAll('.dice-visual .die').forEach((die, index) => {
+        die.addEventListener('click', () => toggleDiceFreeze(index));
+    });
+    
+    // Initialize virtual dice display
+    updateRollsDisplay();
+    updateDiceFreezeDisplay();
+
     // Initialize display
     updateDiceDisplay();
     
@@ -299,6 +312,11 @@ function getDiceSymbol(value) {
 }
 
 function rollRandomDice() {
+    if (rollsRemainingInTurn <= 0) {
+        alert('No rolls remaining! Reset dice to start a new turn.');
+        return;
+    }
+    
     const diceInputs = [
         document.getElementById('die1'),
         document.getElementById('die2'),
@@ -307,9 +325,16 @@ function rollRandomDice() {
         document.getElementById('die5')
     ];
     
-    diceInputs.forEach(input => {
-        input.value = Math.floor(Math.random() * 6) + 1;
+    // Only roll dice that aren't frozen
+    diceInputs.forEach((input, index) => {
+        if (!diceFrozen[index]) {
+            input.value = Math.floor(Math.random() * 6) + 1;
+        }
     });
+    
+    // Decrease rolls remaining
+    rollsRemainingInTurn--;
+    updateRollsDisplay();
     
     updateDiceDisplay();
     calculateAllScores();
@@ -328,8 +353,58 @@ function resetDice() {
         input.value = '';
     });
     
+    // Reset virtual dice state
+    diceFrozen = [false, false, false, false, false];
+    rollsRemainingInTurn = 3;
+    updateRollsDisplay();
+    updateDiceFreezeDisplay();
+    
     updateDiceDisplay();
     clearAllScores();
+}
+
+// Virtual dice helper functions
+function updateRollsDisplay() {
+    // Update the roll dice button text to show remaining rolls
+    const rollButton = document.getElementById('roll-dice');
+    if (rollButton) {
+        if (rollsRemainingInTurn > 0) {
+            rollButton.innerHTML = `<i class="fas fa-dice"></i> Roll Dice (${rollsRemainingInTurn} left)`;
+            rollButton.disabled = false;
+        } else {
+            rollButton.innerHTML = `<i class="fas fa-dice"></i> No Rolls Left`;
+            rollButton.disabled = true;
+        }
+    }
+}
+
+function updateDiceFreezeDisplay() {
+    const diceElements = document.querySelectorAll('.dice-visual .die');
+    diceElements.forEach((die, index) => {
+        if (diceFrozen[index]) {
+            die.classList.add('frozen');
+        } else {
+            die.classList.remove('frozen');
+        }
+    });
+}
+
+function toggleDiceFreeze(index) {
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    // Only allow freezing if the die has a value
+    if (!diceInputs[index].value) {
+        return;
+    }
+    
+    diceFrozen[index] = !diceFrozen[index];
+    updateDiceFreezeDisplay();
 }
 
 // Enhanced dice input validation for mobile

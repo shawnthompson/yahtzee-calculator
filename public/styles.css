@@ -456,15 +456,36 @@ main {
     color: var(--text-color);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
-}
-
-.die i {
-    font-size: 32px;
+    position: relative;
 }
 
 .die:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Virtual dice - frozen state */
+.die {
+    cursor: pointer;
+}
+
+.die.frozen {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+.die.frozen:after {
+    content: "🔒";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #2196f3;
+    color: white;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 10px;
+    z-index: 1;
 }
 
 .player-scorecards {
