@@ -734,124 +734,56 @@ footer p {
     border: 1px solid #ffeaa7;
 }
 
+/* Player Tabs */
+.player-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.player-tab {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 16px;
+    color: #495057;
+    min-width: 100px;
+    text-align: center;
+}
+
+.player-tab:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.player-tab.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.player-tab.active:hover {
+    background: #45a049;
+    border-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+/* Responsive player tabs */
 @media (max-width: 768px) {
-    .game-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .player-inputs {
-        grid-template-columns: 1fr;
-    }
-    
-    .scores-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .dice-container {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .dice-container input {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-        /* Ensure good touch targets on mobile */
-        min-height: 48px;
-        min-width: 48px;
-    }
-    
-    .dice-visual {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .die {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-    
-    .die i {
-        font-size: 24px;
-    }
-    
-    .game-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .game-actions {
-        justify-content: center;
-    }
-    
-    header h1 {
-        font-size: 2em;
-    }
-    
-    .leaderboard-table {
+    .player-tab {
+        padding: 8px 16px;
         font-size: 14px;
-    }
-    
-    /* Better button spacing on mobile */
-    .btn {
-        margin: 3px;
-        padding: 10px 16px;
-    }
-    
-    .test-dice-buttons {
-        justify-content: center;
-    }
-    
-    .test-dice-btn {
-        font-size: 11px;
-        padding: 5px 10px;
-    }
-    
-    /* Mobile styles for bonus tracker */
-    .bonus-tracker {
-        padding: 12px;
-        margin-top: 10px;
-    }
-    
-    .bonus-tracker h4 {
-        font-size: 1em;
-        margin-bottom: 8px;
-    }
-    
-    .bonus-info {
-        gap: 6px;
-    }
-    
-    .bonus-info div {
-        padding: 4px 8px;
-        font-size: 0.85em;
-        flex-direction: column;
-        text-align: center;
-        gap: 2px;
-    }
-    
-    .bonus-info div:not(:first-child) {
-        justify-content: center;
-    }
-    
-    /* Mobile styles for scorecard actions */
-    .scorecard-actions {
-        opacity: 1; /* Always visible on mobile */
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .edit-score-btn,
-    .clear-score-btn {
-        font-size: 14px;
-        min-width: 24px;
-        height: 24px;
-        margin: 1px 0;
-    }
-    
-    .scorecard-item {
-        flex-wrap: wrap;
-        align-items: center;
+        min-width: 80px;
     }
 }

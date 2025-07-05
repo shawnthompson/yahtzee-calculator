@@ -33,7 +33,7 @@ function initializeApp() {
     const newGameBtn = document.getElementById('new-game');
     const resetGameBtn = document.getElementById('reset-game');
     const saveGameBtn = document.getElementById('save-game');
-    const currentPlayerSelect = document.getElementById('current-player-select');
+    const playerTabsContainer = document.getElementById('player-tabs');
     const calculateAllBtn = document.getElementById('calculate-all');
     const rollDiceBtn = document.getElementById('roll-dice');
     const resetDiceBtn = document.getElementById('reset-dice');
@@ -60,7 +60,6 @@ function initializeApp() {
     calculateAllBtn.addEventListener('click', calculateAllScores);
     rollDiceBtn.addEventListener('click', rollRandomDice);
     resetDiceBtn.addEventListener('click', resetDice);
-    currentPlayerSelect.addEventListener('change', switchPlayer);
     
     // Developer mode listeners
     devModeToggle.addEventListener('change', toggleDevMode);
@@ -159,21 +158,23 @@ function setupGamePlay() {
     document.getElementById('player-scorecards').style.display = 'block';
     document.getElementById('leaderboard').style.display = 'block';
     
-    // Populate player select
-    const playerSelect = document.getElementById('current-player-select');
-    playerSelect.innerHTML = '<option value="">Select Player</option>';
+    // Create player tabs
+    const playerTabsContainer = document.getElementById('player-tabs');
+    playerTabsContainer.innerHTML = '';
     
     currentGame.players.forEach(player => {
-        const option = document.createElement('option');
-        option.value = player.name;
-        option.textContent = player.name;
-        playerSelect.appendChild(option);
+        const tabButton = document.createElement('button');
+        tabButton.className = 'player-tab';
+        tabButton.textContent = player.name;
+        tabButton.dataset.playerName = player.name;
+        tabButton.addEventListener('click', () => switchToPlayer(player.name));
+        playerTabsContainer.appendChild(tabButton);
     });
     
     // Auto-select the first player
     if (currentGame.players.length > 0) {
-        playerSelect.value = currentGame.players[0].name;
         currentPlayer = currentGame.players[0].name;
+        updateActivePlayerTab();
         
         // Update use score buttons for the first player
         updateUseScoreButtons(currentGame.players[0].scorecard);
@@ -187,9 +188,9 @@ function setupGamePlay() {
     updateLeaderboard();
 }
 
-function switchPlayer() {
-    const playerSelect = document.getElementById('current-player-select');
-    currentPlayer = playerSelect.value;
+function switchToPlayer(playerName) {
+    currentPlayer = playerName;
+    updateActivePlayerTab();
     
     // Update use score buttons based on current player's scorecard
     if (currentPlayer && currentGame) {
@@ -198,6 +199,17 @@ function switchPlayer() {
             updateUseScoreButtons(player.scorecard);
         }
     }
+}
+
+function updateActivePlayerTab() {
+    const playerTabs = document.querySelectorAll('.player-tab');
+    playerTabs.forEach(tab => {
+        if (tab.dataset.playerName === currentPlayer) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
 }
 
 function updateUseScoreButtons(scorecard) {
@@ -726,13 +738,10 @@ function switchToNextPlayer() {
     const nextPlayerIndex = (currentPlayerIndex + 1) % currentGame.players.length;
     const nextPlayer = currentGame.players[nextPlayerIndex];
     
-    // Update the player selection
-    const playerSelect = document.getElementById('current-player-select');
-    playerSelect.value = nextPlayer.name;
-    
     // Update current player and refresh UI
     currentPlayer = nextPlayer.name;
-    switchPlayer();
+    updateActivePlayerTab();
+    switchToPlayer(nextPlayer.name);
     
     // Reset dice for the new player's turn
     resetDice();
@@ -1124,8 +1133,8 @@ function loadSavedGame() {
         
         // Restore current player selection
         if (currentPlayer) {
-            document.getElementById('current-player-select').value = currentPlayer;
-            switchPlayer();
+            updateActivePlayerTab();
+            switchToPlayer(currentPlayer);
         }
         
         alert('Game loaded successfully!');
@@ -1147,8 +1156,8 @@ function tryLoadSavedGame() {
                 setupGamePlay();
                 
                 if (currentPlayer) {
-                    document.getElementById('current-player-select').value = currentPlayer;
-                    switchPlayer();
+                    updateActivePlayerTab();
+                    switchToPlayer(currentPlayer);
                 }
             } catch (error) {
                 console.log('Could not auto-load saved game:', error);
