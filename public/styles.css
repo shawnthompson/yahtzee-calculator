@@ -261,6 +261,18 @@ main {
     transform: scale(1.05);
 }
 
+/* Visible focus indicator for keyboard navigation */
+.dice-container input:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Selection styling */
+.dice-container input::selection {
+    background-color: var(--primary-color);
+    color: white;
+}
+
 .dice-container input:hover {
     border-color: var(--primary-color);
     transform: scale(1.02);
@@ -276,6 +288,17 @@ main {
 .dice-container input:active {
     transform: scale(0.98);
     border-color: var(--accent-color);
+}
+
+/* Better selection styling for dice inputs */
+.dice-container input::selection {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dice-container input::-moz-selection {
+    background-color: var(--primary-color);
+    color: white;
 }
 
 .btn {

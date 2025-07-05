@@ -69,13 +69,18 @@
                         <div class="dice-input">
                             <h3>Enter Your Dice</h3>
                             <div class="dice-container">
-                                <input type="number" id="die1" min="1" max="6" pattern="[1-6]" inputmode="numeric">
-                                <input type="number" id="die2" min="1" max="6" pattern="[1-6]" inputmode="numeric">
-                                <input type="number" id="die3" min="1" max="6" pattern="[1-6]" inputmode="numeric">
-                                <input type="number" id="die4" min="1" max="6" pattern="[1-6]" inputmode="numeric">
-                                <input type="number" id="die5" min="1" max="6" pattern="[1-6]" inputmode="numeric">
+                                <input type="number" id="die1" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
+                                       aria-label="Die 1 value" aria-describedby="dice-help">
+                                <input type="number" id="die2" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
+                                       aria-label="Die 2 value" aria-describedby="dice-help">
+                                <input type="number" id="die3" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
+                                       aria-label="Die 3 value" aria-describedby="dice-help">
+                                <input type="number" id="die4" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
+                                       aria-label="Die 4 value" aria-describedby="dice-help">
+                                <input type="number" id="die5" min="1" max="6" pattern="[1-6]" inputmode="numeric" 
+                                       aria-label="Die 5 value" aria-describedby="dice-help">
                             </div>
-                            <div class="dice-help">
+                            <div class="dice-help" id="dice-help">
                                 <small>📱 Mobile: Numbers 1-6 only • Use arrow keys to navigate</small>
                             </div>
                             <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>

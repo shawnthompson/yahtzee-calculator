@@ -78,6 +78,11 @@ function initializeApp() {
         input.addEventListener('input', validateDiceInput);
         input.addEventListener('keydown', handleDiceKeydown);
         input.addEventListener('paste', handleDicePaste);
+        
+        // Accessible selection behavior
+        input.addEventListener('focus', handleDiceFocus);
+        input.addEventListener('blur', handleDiceBlur);
+        input.addEventListener('click', handleDiceClick);
     });
     
     // Use score button listeners
@@ -305,6 +310,45 @@ function validateDiceInput(event) {
     }
     
     input.value = value;
+}
+
+function handleDiceFocus(event) {
+    const input = event.target;
+    
+    // Only auto-select if the user clicked on the input
+    // This preserves keyboard navigation behavior for screen readers
+    if (event.relatedTarget && event.relatedTarget.tagName !== 'INPUT') {
+        // Coming from non-input element (likely clicked), select all
+        setTimeout(() => {
+            input.select();
+        }, 0);
+    }
+    
+    // Add visual focus indicator for accessibility
+    input.setAttribute('aria-selected', 'true');
+}
+
+function handleDiceBlur(event) {
+    const input = event.target;
+    // Remove the selection indicator when focus leaves
+    input.removeAttribute('aria-selected');
+}
+
+function handleDiceClick(event) {
+    const input = event.target;
+    
+    // Only select all if the field has content and user clicked
+    if (input.value && !input.dataset.hasBeenClicked) {
+        setTimeout(() => {
+            input.select();
+        }, 0);
+        input.dataset.hasBeenClicked = 'true';
+        
+        // Reset the flag after a short delay
+        setTimeout(() => {
+            delete input.dataset.hasBeenClicked;
+        }, 200);
+    }
 }
 
 function handleDiceKeydown(event) {
