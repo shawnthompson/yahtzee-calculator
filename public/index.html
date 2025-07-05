@@ -8,6 +8,23 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Sticky Header for Current Player -->
+    <div class="sticky-header" id="sticky-header" style="display: none;">
+        <div class="sticky-header-content">
+            <div class="sticky-player-info">
+                <span class="sticky-player-name" id="sticky-player-name">Player Name</span>
+                <span class="sticky-rolls-remaining" id="sticky-rolls-remaining">3 rolls left</span>
+            </div>
+            <div class="sticky-dice-mini" id="sticky-dice-mini">
+                <div class="mini-die"><i class="fas fa-question"></i></div>
+                <div class="mini-die"><i class="fas fa-question"></i></div>
+                <div class="mini-die"><i class="fas fa-question"></i></div>
+                <div class="mini-die"><i class="fas fa-question"></i></div>
+                <div class="mini-die"><i class="fas fa-question"></i></div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1><i class="fas fa-dice"></i> Yahtzee Score Calculator</h1>

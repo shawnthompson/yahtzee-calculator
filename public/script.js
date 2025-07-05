@@ -184,6 +184,9 @@ function setupGamePlay() {
     // Update scorecards display
     updateScorecardsDisplay();
     updateLeaderboard();
+    
+    // Show sticky header
+    updateStickyHeader();
 }
 
 function switchToPlayer(playerName) {
@@ -197,6 +200,9 @@ function switchToPlayer(playerName) {
             updateUseScoreButtons(player.scorecard);
         }
     }
+    
+    // Update sticky header
+    updateStickyHeader();
 }
 
 function updateActivePlayerTab() {
@@ -265,6 +271,9 @@ function resetToSetup() {
     });
     
     updateDiceDisplay();
+    
+    // Hide sticky header
+    updateStickyHeader();
     clearAllScores();
 }
 
@@ -307,6 +316,9 @@ function updateDiceDisplay() {
             updateUseScoreButtons(player.scorecard);
         }
     }
+    
+    // Update sticky header dice display
+    updateStickyDiceDisplay();
 }
 
 function getDiceSymbol(value) {
@@ -386,6 +398,9 @@ function updateRollsDisplay() {
             rollButton.disabled = true;
         }
     }
+    
+    // Update sticky header
+    updateStickyHeader();
 }
 
 function updateDiceFreezeDisplay() {
@@ -1169,6 +1184,70 @@ async function updateLeaderboard() {
     } catch (error) {
         console.error('Error updating leaderboard:', error);
     }
+}
+
+// Sticky header functionality
+function updateStickyHeader() {
+    const stickyHeader = document.getElementById('sticky-header');
+    const stickyPlayerName = document.getElementById('sticky-player-name');
+    const stickyRollsRemaining = document.getElementById('sticky-rolls-remaining');
+    const stickyDiceMini = document.getElementById('sticky-dice-mini');
+    
+    if (currentGame && currentPlayer) {
+        // Show sticky header
+        stickyHeader.style.display = 'block';
+        document.body.classList.add('sticky-header-visible');
+        
+        // Update player name
+        stickyPlayerName.textContent = currentPlayer;
+        
+        // Update rolls remaining
+        const rollsText = rollsRemainingInTurn === 1 ? '1 roll left' : `${rollsRemainingInTurn} rolls left`;
+        stickyRollsRemaining.textContent = rollsText;
+        
+        // Update mini dice display
+        updateStickyDiceDisplay();
+    } else {
+        // Hide sticky header
+        stickyHeader.style.display = 'none';
+        document.body.classList.remove('sticky-header-visible');
+    }
+}
+
+function updateStickyDiceDisplay() {
+    const stickyDiceMini = document.getElementById('sticky-dice-mini');
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    const miniDice = stickyDiceMini.querySelectorAll('.mini-die');
+    
+    diceInputs.forEach((input, index) => {
+        const miniDie = miniDice[index];
+        const value = parseInt(input.value);
+        
+        if (value >= 1 && value <= 6) {
+            miniDie.innerHTML = `<i class="fas fa-dice-${getDiceIcon(value)}"></i>`;
+        } else {
+            miniDie.innerHTML = '<i class="fas fa-question"></i>';
+        }
+        
+        // Show frozen state
+        if (diceFrozen[index]) {
+            miniDie.classList.add('frozen');
+        } else {
+            miniDie.classList.remove('frozen');
+        }
+    });
+}
+
+function getDiceIcon(value) {
+    const icons = ['', 'one', 'two', 'three', 'four', 'five', 'six'];
+    return icons[value] || '';
 }
 
 // Developer Mode Functions
