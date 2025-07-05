@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yahtzee Score Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎲 Yahtzee Score Calculator</h1>
+            <h1><i class="fas fa-dice"></i> Yahtzee Score Calculator</h1>
             <p>Calculate your Yahtzee scores and track multiple players!</p>
         </header>
 
@@ -30,7 +31,7 @@
                 <div class="dev-mode-section" id="dev-mode-section" style="display: none;">
                     <h3>Quick Testing</h3>
                     <div class="dev-buttons">
-                        <button id="quick-demo" class="btn btn-tertiary">🚀 Quick Demo Game</button>
+                        <button id="quick-demo" class="btn btn-tertiary"><i class="fas fa-rocket"></i> Quick Demo Game</button>
                         <button id="load-saved-game" class="btn btn-tertiary">💾 Load Saved Game</button>
                         <button id="clear-saved-data" class="btn btn-tertiary">🗑️ Clear Saved Data</button>
                     </div>
@@ -59,8 +60,8 @@
                     </div>
                     <div class="game-actions">
                         <button id="save-game" class="btn btn-tertiary">💾 Save Game</button>
-                        <button id="reset-game" class="btn btn-tertiary">🔄 Reset Game</button>
-                        <button id="new-game" class="btn btn-secondary">🔄 New Game</button>
+                        <button id="reset-game" class="btn btn-tertiary"><i class="fas fa-redo"></i> Reset Game</button>
+                        <button id="new-game" class="btn btn-secondary"><i class="fas fa-plus"></i> New Game</button>
                     </div>
                 </div>
 
@@ -84,8 +85,8 @@
                                 <small>📱 Mobile: Numbers 1-6 only • Use arrow keys to navigate</small>
                             </div>
                             <button id="calculate-all" class="btn btn-primary">Calculate All Scores</button>
-                            <button id="roll-dice" class="btn btn-secondary">🎲 Roll Random Dice</button>
-                            <button id="reset-dice" class="btn btn-tertiary">🔄 Reset Dice</button>
+                            <button id="roll-dice" class="btn btn-secondary"><i class="fas fa-dice"></i> Roll Random Dice</button>
+                            <button id="reset-dice" class="btn btn-tertiary"><i class="fas fa-eraser"></i> Reset Dice</button>
                             
                             <!-- Developer Mode Test Dice -->
                             <div class="dev-mode-section" id="dev-test-dice" style="display: none;">
@@ -103,13 +104,13 @@
                         </div>
 
                         <div class="dice-display">
-                            <h3>Current Dice</h3>
+                            <h3><i class="fas fa-dice"></i> Current Dice</h3>
                             <div class="dice-visual" id="dice-visual">
-                                <div class="die">?</div>
-                                <div class="die">?</div>
-                                <div class="die">?</div>
-                                <div class="die">?</div>
-                                <div class="die">?</div>
+                                <div class="die"><i class="fas fa-question"></i></div>
+                                <div class="die"><i class="fas fa-question"></i></div>
+                                <div class="die"><i class="fas fa-question"></i></div>
+                                <div class="die"><i class="fas fa-question"></i></div>
+                                <div class="die"><i class="fas fa-question"></i></div>
                             </div>
                         </div>
                     </div>

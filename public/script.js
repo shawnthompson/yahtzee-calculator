@@ -234,11 +234,11 @@ function updateDiceDisplay() {
     diceElements.forEach((die, index) => {
         const value = dice[index];
         if (value > 0) {
-            die.textContent = getDiceSymbol(value);
+            die.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
             die.style.backgroundColor = '#4CAF50';
             die.style.color = 'white';
         } else {
-            die.textContent = '?';
+            die.innerHTML = '<i class="fas fa-question"></i>';
             die.style.backgroundColor = 'white';
             die.style.color = '#333';
         }
@@ -246,15 +246,15 @@ function updateDiceDisplay() {
 }
 
 function getDiceSymbol(value) {
-    const symbols = {
-        1: '⚀',
-        2: '⚁',
-        3: '⚂',
-        4: '⚃',
-        5: '⚄',
-        6: '⚅'
+    const icons = {
+        1: 'fas fa-dice-one',
+        2: 'fas fa-dice-two',
+        3: 'fas fa-dice-three',
+        4: 'fas fa-dice-four',
+        5: 'fas fa-dice-five',
+        6: 'fas fa-dice-six'
     };
-    return symbols[value] || value;
+    return icons[value] || 'fas fa-question';
 }
 
 function rollRandomDice() {

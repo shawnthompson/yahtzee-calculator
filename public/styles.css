@@ -451,11 +451,15 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
     color: var(--text-color);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+}
+
+.die i {
+    font-size: 32px;
 }
 
 .die:hover {
@@ -718,6 +722,10 @@ footer p {
         width: 50px;
         height: 50px;
         font-size: 20px;
+    }
+    
+    .die i {
+        font-size: 24px;
     }
     
     .game-header {
