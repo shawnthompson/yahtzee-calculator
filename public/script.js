@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    // Load saved developer mode state
-    loadDevModeState();
+    // Load app configuration from server
+    loadAppConfig();
     
     // Get DOM elements
     const gameSetup = document.getElementById('game-setup');
@@ -1034,6 +1034,34 @@ async function updateLeaderboard() {
 }
 
 // Developer Mode Functions
+async function loadAppConfig() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        devMode = config.devMode;
+        
+        // Update UI based on server configuration
+        const devModeToggle = document.getElementById('dev-mode-toggle');
+        if (devModeToggle) {
+            devModeToggle.checked = devMode;
+            // Hide the toggle since it's now controlled by environment variable
+            devModeToggle.parentElement.style.display = 'none';
+        }
+        
+        if (devMode) {
+            showDevModeFeatures();
+        } else {
+            hideDevModeFeatures();
+        }
+    } catch (error) {
+        console.error('Error loading app config:', error);
+        // Fallback to false if can't load from server
+        devMode = false;
+        hideDevModeFeatures();
+    }
+}
+
 function loadDevModeState() {
     const savedDevMode = localStorage.getItem(STORAGE_KEYS.DEV_MODE);
     if (savedDevMode === 'true') {

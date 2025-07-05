@@ -164,6 +164,15 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Get app configuration
+app.get('/api/config', (req, res) => {
+  res.json({
+    appName: APP_NAME,
+    devMode: process.env.DEV_MODE === 'true',
+    nodeEnv: NODE_ENV
+  });
+});
+
 app.post('/api/calculate', (req, res) => {
   try {
     const { dice, category } = req.body;
