@@ -95,14 +95,20 @@ const calculateFinalScore = (scorecard) => {
   const lowerTotal = lowerSection.reduce((sum, category) => {
     return sum + (scorecard[category] || 0);
   }, 0);
+
+  // Add bonus Yahtzees (100 points each)
+  const bonusYahtzees = scorecard.bonusYahtzees || 0;
+  const bonusYahtzeeScore = bonusYahtzees * 100;
   
   // Total score
-  const totalScore = upperTotal + upperBonus + lowerTotal;
+  const totalScore = upperTotal + upperBonus + lowerTotal + bonusYahtzeeScore;
   
   return {
     upperTotal,
     upperBonus,
     lowerTotal,
+    bonusYahtzees,
+    bonusYahtzeeScore,
     totalScore
   };
 };
@@ -112,6 +118,46 @@ let gameSessions = {};
 
 // Generate a simple game ID
 const generateGameId = () => Math.random().toString(36).substring(2, 8);
+
+// Helper function to check if dice form a Yahtzee
+const isYahtzee = (dice) => {
+  return dice.every(d => d === dice[0]);
+};
+
+// Helper function to handle multiple Yahtzees
+const handleMultipleYahtzees = (player, dice, category) => {
+  const rollIsYahtzee = isYahtzee(dice);
+  
+  if (rollIsYahtzee) {
+    // If this is a Yahtzee roll
+    if (category === 'yahtzee') {
+      // Recording in the Yahtzee category
+      if (player.scorecard.yahtzee !== undefined) {
+        // Already have a Yahtzee, this is a bonus - don't update the yahtzee score
+        player.scorecard.bonusYahtzees = (player.scorecard.bonusYahtzees || 0) + 1;
+        // Return the existing score and indicate this is a bonus
+        return { score: player.scorecard.yahtzee, bonusYahtzee: true, bonusPoints: 100, skipUpdate: true };
+      } else {
+        // First Yahtzee
+        return { score: 50, bonusYahtzee: false };
+      }
+    } else {
+      // Using Yahtzee as joker for another category
+      if (player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0) {
+        // Have a Yahtzee, can use as joker
+        player.scorecard.bonusYahtzees = (player.scorecard.bonusYahtzees || 0) + 1;
+        
+        // Calculate score for the chosen category
+        const score = yahtzeeScoring[category](dice);
+        return { score, bonusYahtzee: true, joker: true, bonusPoints: 100 };
+      }
+    }
+  }
+  
+  // Normal scoring
+  const score = yahtzeeScoring[category](dice);
+  return { score, bonusYahtzee: false };
+};
 
 // Routes
 app.get('/', (req, res) => {
@@ -212,30 +258,51 @@ app.get('/api/game/:gameId', (req, res) => {
 app.post('/api/game/:gameId/score', (req, res) => {
   try {
     const { gameId } = req.params;
-    const { playerName, category, score } = req.body;
+    const { playerName, category, score, dice } = req.body;
     
     const game = gameSessions[gameId];
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
-    
+
     const player = game.players.find(p => p.name === playerName);
     if (!player) {
       return res.status(404).json({ error: 'Player not found' });
     }
-    
-    // Update player's scorecard
-    player.scorecard[category] = score;
-    
+
+    let finalScore = score;
+    let bonusYahtzee = false;
+    let joker = false;
+    let bonusPoints = 0;
+    let skipUpdate = false;
+
+    // Handle multiple Yahtzees if dice are provided
+    if (dice && dice.length === 5) {
+      const result = handleMultipleYahtzees(player, dice, category);
+      finalScore = result.score;
+      bonusYahtzee = result.bonusYahtzee;
+      joker = result.joker || false;
+      bonusPoints = result.bonusPoints || 0;
+      skipUpdate = result.skipUpdate || false;
+    }
+
+    // Update player's scorecard only if not skipping
+    if (!skipUpdate) {
+      player.scorecard[category] = finalScore;
+    }
+
     // Calculate final score
     player.finalScore = calculateFinalScore(player.scorecard);
-    
+
     res.json({ 
       playerName, 
       category, 
-      score, 
+      score: finalScore, 
       finalScore: player.finalScore,
-      scorecard: player.scorecard 
+      scorecard: player.scorecard,
+      bonusYahtzee,
+      joker,
+      bonusPoints
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error updating score.' });

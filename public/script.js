@@ -190,12 +190,33 @@ function switchPlayer() {
 function updateUseScoreButtons(scorecard) {
     document.querySelectorAll('.use-score-btn').forEach(btn => {
         const category = btn.dataset.category;
-        if (scorecard[category] !== undefined) {
+        
+        // Special handling for Yahtzee - allow multiple if current roll is a Yahtzee
+        if (category === 'yahtzee' && scorecard[category] !== undefined) {
+            const dice = getDiceValues();
+            const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
+            
+            if (isCurrentRollYahtzee) {
+                btn.disabled = false;
+                btn.textContent = 'Bonus!';
+                btn.style.backgroundColor = '#ffc107';
+                btn.style.color = '#000';
+            } else {
+                btn.disabled = true;
+                btn.textContent = 'Used';
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            }
+        } else if (scorecard[category] !== undefined) {
             btn.disabled = true;
             btn.textContent = 'Used';
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
         } else {
             btn.disabled = false;
             btn.textContent = 'Use';
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
         }
     });
 }
@@ -255,6 +276,14 @@ function updateDiceDisplay() {
             die.style.color = '#333';
         }
     });
+    
+    // Update use score buttons to handle multiple Yahtzees
+    if (currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            updateUseScoreButtons(player.scorecard);
+        }
+    }
 }
 
 function getDiceSymbol(value) {
@@ -462,6 +491,64 @@ function updateScoreDisplay(scores) {
             }
         }
     });
+    
+    // Update use score buttons to handle multiple Yahtzees
+    if (currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            updateUseScoreButtons(player.scorecard);
+        }
+    }
+    
+    // Check for potential bonus Yahtzee
+    updateBonusYahtzeeDisplay();
+}
+
+function updateBonusYahtzeeDisplay() {
+    const dice = getDiceValues();
+    const bonusYahtzeeElement = document.getElementById('bonus-yahtzee-score');
+    
+    if (!bonusYahtzeeElement) return;
+    
+    // Check if current player has a Yahtzee in their scorecard
+    if (currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
+            const bonusYahtzees = player.scorecard.bonusYahtzees || 0;
+            const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
+            
+            // Update bonus Yahtzee display
+            bonusYahtzeeElement.textContent = `${bonusYahtzees} × 100 = ${bonusYahtzees * 100}`;
+            
+            // Show potential bonus if current roll is a Yahtzee and player has a Yahtzee
+            if (isCurrentRollYahtzee && hasYahtzee) {
+                bonusYahtzeeElement.style.backgroundColor = '#fff3cd';
+                bonusYahtzeeElement.style.color = '#856404';
+                bonusYahtzeeElement.parentElement.style.borderColor = '#ffc107';
+                
+                // Show notification
+                const notification = bonusYahtzeeElement.parentElement.querySelector('.bonus-notification');
+                if (!notification) {
+                    const notificationDiv = document.createElement('div');
+                    notificationDiv.className = 'bonus-notification';
+                    notificationDiv.style.cssText = 'font-size: 12px; color: #856404; font-weight: bold; margin-top: 5px;';
+                    notificationDiv.textContent = 'Bonus Yahtzee available! (+100 points)';
+                    bonusYahtzeeElement.parentElement.appendChild(notificationDiv);
+                }
+            } else {
+                bonusYahtzeeElement.style.backgroundColor = '#f0f8ff';
+                bonusYahtzeeElement.style.color = '#333';
+                bonusYahtzeeElement.parentElement.style.borderColor = '#4CAF50';
+                
+                // Remove notification
+                const notification = bonusYahtzeeElement.parentElement.querySelector('.bonus-notification');
+                if (notification) {
+                    notification.remove();
+                }
+            }
+        }
+    }
 }
 
 function clearAllScores() {
@@ -495,6 +582,7 @@ async function useScore(event) {
     }
     
     const score = currentScores[category] || 0;
+    const dice = getDiceValues();
     
     try {
         const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
@@ -505,7 +593,8 @@ async function useScore(event) {
             body: JSON.stringify({
                 playerName: currentPlayer,
                 category: category,
-                score: score
+                score: score,
+                dice: dice
             })
         });
         
@@ -530,7 +619,18 @@ async function useScore(event) {
         
         // Show success message with user-friendly category name
         const displayName = categoryDisplayNames[category] || category;
-        alert(`Score recorded: ${score} points for ${displayName}!`);
+        let message = `Score recorded: ${data.score} points for ${displayName}!`;
+        
+        // Add bonus Yahtzee information
+        if (data.bonusYahtzee) {
+            if (data.joker) {
+                message += ` (Used as Yahtzee joker - Bonus +${data.bonusPoints || 100} points!)`;
+            } else {
+                message += ` (Bonus Yahtzee - +${data.bonusPoints || 100} points!)`;
+            }
+        }
+        
+        alert(message);
         
         // Auto-switch to next player for smoother gameplay
         switchToNextPlayer();
@@ -780,6 +880,8 @@ function createScorecardElement(player) {
             <div class="final-score">
                 <div>Upper: ${player.finalScore.upperTotal} + Bonus: ${player.finalScore.upperBonus}</div>
                 <div>Lower: ${player.finalScore.lowerTotal}</div>
+                ${player.finalScore.bonusYahtzees > 0 ? 
+                    `<div>Bonus Yahtzees: ${player.finalScore.bonusYahtzees} × 100 = ${player.finalScore.bonusYahtzeeScore}</div>` : ''}
                 <div>Total: ${player.finalScore.totalScore}</div>
             </div>
         `;
@@ -818,6 +920,7 @@ async function updateLeaderboard() {
                         <th>Upper</th>
                         <th>Bonus</th>
                         <th>Lower</th>
+                        <th>Yahtzee Bonus</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -825,6 +928,8 @@ async function updateLeaderboard() {
         
         data.leaderboard.forEach(player => {
             const rankClass = player.rank <= 3 ? `rank-${player.rank}` : '';
+            const bonusYahtzees = player.bonusYahtzees || 0;
+            const bonusYahtzeeScore = player.bonusYahtzeeScore || 0;
             html += `
                 <tr class="${rankClass}">
                     <td>${player.rank}</td>
@@ -833,6 +938,7 @@ async function updateLeaderboard() {
                     <td>${player.upperTotal}</td>
                     <td>${player.upperBonus}</td>
                     <td>${player.lowerTotal}</td>
+                    <td>${bonusYahtzees > 0 ? `${bonusYahtzees} × 100` : '-'}</td>
                 </tr>
             `;
         });

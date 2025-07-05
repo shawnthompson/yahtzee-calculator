@@ -686,6 +686,33 @@ footer p {
     font-style: italic;
 }
 
+/* Bonus Yahtzee styling */
+.bonus-yahtzee-item {
+    background-color: #f0f8ff !important;
+    border-left: 4px solid #4CAF50 !important;
+}
+
+.bonus-yahtzee-item .category-name {
+    font-weight: bold;
+}
+
+.bonus-yahtzee-item .score-info {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.bonus-notification {
+    font-size: 12px;
+    color: #856404;
+    font-weight: bold;
+    margin-top: 5px;
+    padding: 5px;
+    background-color: #fff3cd;
+    border-radius: 3px;
+    border: 1px solid #ffeaa7;
+}
+
 @media (max-width: 768px) {
     .game-content {
         grid-template-columns: 1fr;
