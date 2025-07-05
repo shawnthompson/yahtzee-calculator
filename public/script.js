@@ -157,6 +157,18 @@ function setupGamePlay() {
         playerSelect.appendChild(option);
     });
     
+    // Auto-select the first player
+    if (currentGame.players.length > 0) {
+        playerSelect.value = currentGame.players[0].name;
+        currentPlayer = currentGame.players[0].name;
+        
+        // Update use score buttons for the first player
+        updateUseScoreButtons(currentGame.players[0].scorecard);
+        
+        // Reset dice when starting new game
+        resetDice();
+    }
+    
     // Update scorecards display
     updateScorecardsDisplay();
     updateLeaderboard();
@@ -889,12 +901,6 @@ async function createQuickDemo() {
         
         currentGame = data;
         setupGamePlay();
-        
-        // Auto-select first player for convenience
-        const playerSelect = document.getElementById('current-player-select');
-        playerSelect.value = demoPlayers[0];
-        currentPlayer = demoPlayers[0];
-        switchPlayer();
         
         // Show success message
         alert('Demo game created with players: ' + demoPlayers.join(', '));
