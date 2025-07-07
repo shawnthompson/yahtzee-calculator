@@ -128,6 +128,20 @@
                                 <button id="reset-dice" class="btn btn-tertiary"><i class="fas fa-eraser"></i> Reset All Dice</button>
                             </div>
                             
+                            <!-- Quick Entry for Real Dice -->
+                            <div class="quick-entry-section">
+                                <h4><i class="fas fa-bolt"></i> Quick Entry</h4>
+                                <div class="fast-entry">
+                                    <label for="dice-fast-input">Type all dice (e.g., "12345" or "1,2,3,4,5"):</label>
+                                    <div class="fast-input-group">
+                                        <input type="text" id="dice-fast-input" maxlength="11" 
+                                               aria-describedby="fast-entry-help">
+                                        <button id="set-dice-btn" class="btn btn-primary">Set Dice</button>
+                                    </div>
+                                    <small id="fast-entry-help" class="input-help">Enter 5 numbers (1-6) with or without spaces/commas</small>
+                                </div>
+                            </div>
+                            
                             <!-- Hidden inputs for backward compatibility -->
                             <div style="display: none;">
                                 <input type="number" id="die1" min="1" max="6">

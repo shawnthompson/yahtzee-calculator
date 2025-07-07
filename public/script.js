@@ -185,6 +185,9 @@ function initializeApp() {
         btn.addEventListener('click', loadTestDice);
     });
     
+    // Quick entry functionality
+    initializeQuickEntry();
+    
     // Dice input listeners
     diceInputs.forEach(input => {
         input.addEventListener('input', updateDiceDisplay);
@@ -1594,6 +1597,177 @@ function loadTestDice(event) {
     calculateAllScores();
 }
 
+// Quick Entry Functions for Real Dice Play
+function initializeQuickEntry() {
+    const fastInput = document.getElementById('dice-fast-input');
+    const setDiceBtn = document.getElementById('set-dice-btn');
+    
+    // Fast input event listeners
+    if (fastInput && setDiceBtn) {
+        // Set dice from fast input when button clicked
+        setDiceBtn.addEventListener('click', setDiceFromFastInput);
+        
+        // Set dice from fast input when Enter is pressed
+        fastInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setDiceFromFastInput();
+            }
+        });
+        
+        // Real-time validation and formatting
+        fastInput.addEventListener('input', validateFastInput);
+        
+        // Clear input after successful dice setting
+        fastInput.addEventListener('blur', () => {
+            if (fastInput.value && isDiceSetComplete()) {
+                setTimeout(() => {
+                    fastInput.value = '';
+                }, 100);
+            }
+        });
+    }
+}
+
+function setDiceFromFastInput() {
+    const fastInput = document.getElementById('dice-fast-input');
+    const inputValue = fastInput.value.trim();
+    
+    if (!inputValue) {
+        showToast('Please enter dice values first', 'warning');
+        fastInput.focus();
+        return;
+    }
+    
+    const diceValues = parseDiceInput(inputValue);
+    
+    if (diceValues.length !== 5) {
+        showToast('Please enter exactly 5 dice values (1-6)', 'error');
+        fastInput.focus();
+        return;
+    }
+    
+    // Validate all values are 1-6
+    const invalidValues = diceValues.filter(val => val < 1 || val > 6);
+    if (invalidValues.length > 0) {
+        showToast('All dice values must be between 1 and 6', 'error');
+        fastInput.focus();
+        return;
+    }
+    
+    // Set the dice
+    setDiceFromString(diceValues.join(','));
+    
+    // Show success message and clear input
+    showToast(`Dice set to: ${diceValues.join('-')}`, 'success', 2000);
+    fastInput.value = '';
+    
+    // Announce to screen reader
+    announceToScreenReader(`Dice set to ${diceValues.join(', ')}`);
+}
+
+function parseDiceInput(input) {
+    // Remove all whitespace
+    let cleaned = input.replace(/\s/g, '');
+    
+    // Handle comma-separated format (1,2,3,4,5)
+    if (cleaned.includes(',')) {
+        return cleaned.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+    }
+    
+    // Handle space-separated format (1 2 3 4 5) - already handled by whitespace removal
+    // Handle continuous format (12345)
+    if (cleaned.length === 5 && /^\d{5}$/.test(cleaned)) {
+        return cleaned.split('').map(digit => parseInt(digit));
+    }
+    
+    // Handle dash-separated format (1-2-3-4-5)
+    if (cleaned.includes('-')) {
+        return cleaned.split('-').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+    }
+    
+    // Handle dot-separated format (1.2.3.4.5)
+    if (cleaned.includes('.')) {
+        return cleaned.split('.').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+    }
+    
+    // Fallback: try to extract all digits
+    const digits = cleaned.match(/\d/g);
+    return digits ? digits.map(digit => parseInt(digit)) : [];
+}
+
+function setDiceFromString(diceString) {
+    const diceValues = diceString.split(',').map(Number);
+    
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    diceInputs.forEach((input, index) => {
+        if (index < diceValues.length) {
+            input.value = diceValues[index];
+        }
+    });
+    
+    // Reset frozen state when manually setting dice
+    diceFrozen = [false, false, false, false, false];
+    
+    updateDiceDisplay();
+    calculateAllScores();
+}
+
+function validateFastInput(event) {
+    const input = event.target;
+    let value = input.value;
+    
+    // Allow only digits, commas, spaces, dashes, and dots
+    value = value.replace(/[^\d,\s\-\.]/g, '');
+    
+    // Limit length to prevent excessive input
+    if (value.length > 11) {
+        value = value.substring(0, 11);
+    }
+    
+    input.value = value;
+    
+    // Provide real-time feedback
+    const diceValues = parseDiceInput(value);
+    if (value.length > 0) {
+        if (diceValues.length === 5 && diceValues.every(val => val >= 1 && val <= 6)) {
+            input.style.borderColor = 'var(--primary-color)';
+            input.style.backgroundColor = '#e8f5e8';
+        } else if (diceValues.length > 0) {
+            input.style.borderColor = 'var(--accent-color)';
+            input.style.backgroundColor = '#fff3e0';
+        } else {
+            input.style.borderColor = 'var(--error-color)';
+            input.style.backgroundColor = '#ffebee';
+        }
+    } else {
+        input.style.borderColor = '';
+        input.style.backgroundColor = '';
+    }
+}
+
+function isDiceSetComplete() {
+    const diceInputs = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3'),
+        document.getElementById('die4'),
+        document.getElementById('die5')
+    ];
+    
+    return diceInputs.every(input => {
+        const value = parseInt(input.value);
+        return !isNaN(value) && value >= 1 && value <= 6;
+    });
+}
+
 // Die edit modal functionality
 let currentEditingDie = null;
 
@@ -2017,7 +2191,7 @@ function showSuccessToast(message) {
     // Add animation keyframes if not already added
     if (!document.querySelector('#toast-animations')) {
         const style = document.createElement('style');
-        style.id = 'toast-animations';
+               style.id = 'toast-animations';
         style.textContent = `
             @keyframes slideInToast {
                 from { transform: translateX(100%); opacity: 0; }
