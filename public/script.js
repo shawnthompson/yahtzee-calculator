@@ -49,6 +49,64 @@ function debounce(func, wait) {
     };
 }
 
+// Toast notification function
+function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    const iconClass = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    }[type] || 'fa-info-circle';
+    
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas ${iconClass}"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" aria-label="Close notification">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Show toast with animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Close button functionality
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+        removeToast(toast);
+    });
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+        if (toast.parentNode) {
+            removeToast(toast);
+        }
+    }, duration);
+}
+
+function removeToast(toast) {
+    toast.classList.remove('show');
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
+}
+
 // Yahtzee Score Calculator with Player Management
 
 let currentGame = null;
@@ -103,7 +161,13 @@ function initializeApp() {
     ];
 
     // Event listeners
-    startGameBtn.addEventListener('click', startNewGame);
+    // Handle form submission for starting game
+    const playerSetupForm = document.getElementById('player-setup-form');
+    playerSetupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        startNewGame();
+    });
+    
     newGameBtn.addEventListener('click', resetToSetup);
     resetGameBtn.addEventListener('click', resetCurrentGame);
     saveGameBtn.addEventListener('click', saveGameState);
@@ -167,14 +231,18 @@ async function startNewGame() {
         document.getElementById('player4')
     ];
     
+    // Check if at least one player name is provided
+    const player1Name = playerInputs[0].value.trim();
+    
+    if (!player1Name) {
+        showToast('Please enter at least one player name!', 'warning');
+        playerInputs[0].focus();
+        return;
+    }
+    
     const players = playerInputs
         .map(input => input.value.trim())
         .filter(name => name.length > 0);
-    
-    if (players.length === 0) {
-        alert('Please enter at least one player name!');
-        return;
-    }
     
     try {
         const response = await fetch('/api/game/create', {
@@ -188,16 +256,17 @@ async function startNewGame() {
         const data = await response.json();
         
         if (data.error) {
-            alert('Error creating game: ' + data.error);
+            showToast('Error creating game: ' + data.error, 'error');
             return;
         }
         
         currentGame = data;
         setupGamePlay();
+        showToast(`Game started with ${players.length} player${players.length !== 1 ? 's' : ''}!`, 'success');
         
     } catch (error) {
         console.error('Error creating game:', error);
-        alert('Error creating game. Please try again.');
+        showToast('Error creating game. Please try again.', 'error');
     }
 }
 

@@ -35,6 +35,7 @@
             <!-- Game Setup Section -->
             <section class="game-setup" id="game-setup">
                 <h2>Setup New Game</h2>
+                <p class="setup-description">Enter at least one player name to start a new game. You can add up to 4 players.</p>
                 
                 <!-- Developer Mode Toggle -->
                 <div class="dev-mode-toggle" style="display: none;">
@@ -54,15 +55,31 @@
                     </div>
                 </div>
 
-                <div class="player-setup">
+                <form class="player-setup" id="player-setup-form">
                     <div class="player-inputs">
-                        <input type="text" id="player1" placeholder="Player 1 Name" maxlength="20">
-                        <input type="text" id="player2" placeholder="Player 2 Name" maxlength="20">
-                        <input type="text" id="player3" placeholder="Player 3 Name (optional)" maxlength="20">
-                        <input type="text" id="player4" placeholder="Player 4 Name (optional)" maxlength="20">
+                        <div class="player-input-group">
+                            <label for="player1">Player 1 Name:</label>
+                            <input type="text" id="player1" maxlength="20" required aria-describedby="player1-help">
+                            <small id="player1-help" class="input-help">Required</small>
+                        </div>
+                        <div class="player-input-group">
+                            <label for="player2">Player 2 Name:</label>
+                            <input type="text" id="player2" maxlength="20" aria-describedby="player2-help">
+                            <small id="player2-help" class="input-help">Optional</small>
+                        </div>
+                        <div class="player-input-group">
+                            <label for="player3">Player 3 Name:</label>
+                            <input type="text" id="player3" maxlength="20" aria-describedby="player3-help">
+                            <small id="player3-help" class="input-help">Optional</small>
+                        </div>
+                        <div class="player-input-group">
+                            <label for="player4">Player 4 Name:</label>
+                            <input type="text" id="player4" maxlength="20" aria-describedby="player4-help">
+                            <small id="player4-help" class="input-help">Optional</small>
+                        </div>
                     </div>
-                    <button id="start-game" class="btn btn-primary">🎮 Start Game</button>
-                </div>
+                    <button type="submit" id="start-game" class="btn btn-primary">🎮 Start Game</button>
+                </form>
             </section>
 
             <!-- Game Play Section -->
@@ -241,6 +258,9 @@
         </footer>
     </div>
 
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- Die Edit Modal -->
     <div class="modal-overlay" id="die-edit-modal" role="dialog" aria-labelledby="die-modal-title" aria-modal="true" style="display: none;">
         <div class="modal-content">
@@ -260,12 +280,12 @@
                     <div class="die-controls">
                         <h4>Change Value:</h4>
                         <div class="die-value-buttons">
-                            <button class="die-value-btn" data-value="1"><i class="fas fa-dice-one"></i></button>
-                            <button class="die-value-btn" data-value="2"><i class="fas fa-dice-two"></i></button>
-                            <button class="die-value-btn" data-value="3"><i class="fas fa-dice-three"></i></button>
-                            <button class="die-value-btn" data-value="4"><i class="fas fa-dice-four"></i></button>
-                            <button class="die-value-btn" data-value="5"><i class="fas fa-dice-five"></i></button>
-                            <button class="die-value-btn" data-value="6"><i class="fas fa-dice-six"></i></button>
+                            <button class="die-value-btn" data-value="1" aria-label="Set die value to 1"><i class="fas fa-dice-one"></i></button>
+                            <button class="die-value-btn" data-value="2" aria-label="Set die value to 2"><i class="fas fa-dice-two"></i></button>
+                            <button class="die-value-btn" data-value="3" aria-label="Set die value to 3"><i class="fas fa-dice-three"></i></button>
+                            <button class="die-value-btn" data-value="4" aria-label="Set die value to 4"><i class="fas fa-dice-four"></i></button>
+                            <button class="die-value-btn" data-value="5" aria-label="Set die value to 5"><i class="fas fa-dice-five"></i></button>
+                            <button class="die-value-btn" data-value="6" aria-label="Set die value to 6"><i class="fas fa-dice-six"></i></button>
                         </div>
                     </div>
                     <div class="die-lock-control">

@@ -5,7 +5,9 @@
     --background-color: #f5f5f5;
     --card-background: #ffffff;
     --text-color: #333333;
+    --text-muted: #666666;
     --border-color: #ddd;
+    --error-color: #f44336;
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -176,6 +178,13 @@ main {
     color: var(--primary-color);
 }
 
+.setup-description {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
 .player-setup {
     display: flex;
     flex-direction: column;
@@ -185,10 +194,22 @@ main {
 
 .player-inputs {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
     width: 100%;
     max-width: 800px;
+}
+
+.player-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.player-input-group label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 14px;
 }
 
 .player-inputs input {
@@ -202,6 +223,23 @@ main {
 .player-inputs input:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.player-inputs input:invalid {
+    border-color: var(--error-color);
+}
+
+.input-help {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.input-help:contains("Required"),
+input[required] + .input-help {
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 .game-play {
@@ -1235,44 +1273,107 @@ footer p {
     font-size: 1.2em;
 }
 
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: var(--shadow);
+    max-width: 350px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-left: 4px solid var(--primary-color);
+}
+
+.toast.error {
+    border-left: 4px solid var(--error-color);
+}
+
+.toast.info {
+    border-left: 4px solid var(--secondary-color);
+}
+
+.toast .toast-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.toast.success .toast-icon {
+    color: var(--primary-color);
+}
+
+.toast.error .toast-icon {
+    color: var(--error-color);
+}
+
+.toast.info .toast-icon {
+    color: var(--secondary-color);
+}
+
+.toast .toast-content {
+    flex: 1;
+}
+
+.toast .toast-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.toast .toast-message {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.toast .toast-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.toast .toast-close:hover {
+    color: var(--text-color);
+}
+
 @media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        margin: 10px;
+    .toast-container {
+        left: 20px;
+        right: 20px;
+        top: 10px;
     }
     
-    .die-value-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 160px;
-    }
-    
-    .large-die {
-        width: 70px;
-        height: 70px;
-        font-size: 32px;
-    }
-    
-    .score-summary {
-        gap: 15px;
-    }
-    
-    .confirmation-dice {
-        gap: 8px;
-    }
-    
-    .confirmation-die {
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-    }
-    
-    .player-info {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-    }
-    
-    .score-value {
-        font-size: 1.1em;
+    .toast {
+        max-width: none;
     }
 }
