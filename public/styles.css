@@ -1011,3 +1011,238 @@ footer p {
         flex-direction: column;
     }
 }
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.25em;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Add Score Modal Specific Styles */
+.add-score-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.score-info {
+    background: var(--background-color);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.player-category {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.player-category:last-child {
+    margin-bottom: 0;
+}
+
+.player-category .label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Dice display in add score modal */
+.current-dice-display {
+    text-align: center;
+}
+
+.current-dice-display h4 {
+    margin-bottom: 12px;
+    color: var(--text-color);
+    font-size: 1em;
+}
+
+.add-score-dice,
+.confirmation-dice {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+#confirmation-dice {
+    margin-bottom: 10px;
+}
+
+/* Style dice in both add score modal containers */
+.add-score-dice .confirmation-die,
+.confirmation-dice .confirmation-die {
+    width: 70px;
+    height: 70px;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--text-color);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.add-score-dice .confirmation-die.frozen,
+.confirmation-dice .confirmation-die.frozen {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+    position: relative;
+}
+
+.add-score-dice .confirmation-die.frozen:after,
+.confirmation-dice .confirmation-die.frozen:after {
+    content: "🔒";
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #2196f3;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 8px;
+}
+
+.score-input-section .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.score-input-section label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.score-input-section input {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.score-input-section input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.fixed-score {
+    background: var(--background-color);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.fixed-score-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.fixed-score-info .label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.fixed-score-info span:last-child {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.fixed-score-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 10px;
+    }
+    
+    .modal-content {
+        max-width: 100%;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 16px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}

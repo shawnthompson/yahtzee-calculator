@@ -215,6 +215,9 @@ function initializeApp() {
     // Initialize score confirmation modal
     initializeScoreConfirmationModal();
     
+    // Initialize add score modal
+    initializeAddScoreModal();
+    
     // Initialize virtual dice display
     updateRollsDisplay();
     updateDiceFreezeDisplay();
@@ -715,10 +718,27 @@ function updateScoreDisplay(scores) {
     Object.keys(scores).forEach(category => {
         const scoreElement = document.getElementById(`${category}-score`);
         if (scoreElement) {
-            scoreElement.textContent = scores[category];
+            let displayScore = scores[category];
+            
+            // Special handling for Yahtzee - show 100 if this is a bonus Yahtzee
+            if (category === 'yahtzee' && currentPlayer && currentGame) {
+                const player = currentGame.players.find(p => p.name === currentPlayer);
+                if (player && player.scorecard) {
+                    const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
+                    const dice = getDiceValues();
+                    const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
+                    
+                    // If player already has a Yahtzee and current roll is also a Yahtzee, show 100
+                    if (hasYahtzee && isCurrentRollYahtzee && displayScore === 50) {
+                        displayScore = 100;
+                    }
+                }
+            }
+            
+            scoreElement.textContent = displayScore;
             
             // Add visual feedback for good scores
-            if (scores[category] > 0) {
+            if (displayScore > 0) {
                 scoreElement.style.backgroundColor = '#e8f5e8';
                 scoreElement.style.color = '#2e7d32';
             } else {
@@ -741,50 +761,9 @@ function updateScoreDisplay(scores) {
 }
 
 function updateBonusYahtzeeDisplay() {
-    const dice = getDiceValues();
-    const bonusYahtzeeElement = document.getElementById('bonus-yahtzee-score');
-    
-    if (!bonusYahtzeeElement) return;
-    
-    // Check if current player has a Yahtzee in their scorecard
-    if (currentPlayer && currentGame) {
-        const player = currentGame.players.find(p => p.name === currentPlayer);
-        if (player && player.scorecard) {
-            const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
-            const bonusYahtzees = player.scorecard.bonusYahtzees || 0;
-            const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
-            
-            // Update bonus Yahtzee display
-            bonusYahtzeeElement.textContent = `${bonusYahtzees} × 100 = ${bonusYahtzees * 100}`;
-            
-            // Show potential bonus if current roll is a Yahtzee and player has a Yahtzee
-            if (isCurrentRollYahtzee && hasYahtzee) {
-                bonusYahtzeeElement.style.backgroundColor = '#fff3cd';
-                bonusYahtzeeElement.style.color = '#856404';
-                bonusYahtzeeElement.parentElement.style.borderColor = '#ffc107';
-                
-                // Show notification
-                const notification = bonusYahtzeeElement.parentElement.querySelector('.bonus-notification');
-                if (!notification) {
-                    const notificationDiv = document.createElement('div');
-                    notificationDiv.className = 'bonus-notification';
-                    notificationDiv.style.cssText = 'font-size: 12px; color: #856404; font-weight: bold; margin-top: 5px;';
-                    notificationDiv.textContent = 'Bonus Yahtzee available! (+100 points)';
-                    bonusYahtzeeElement.parentElement.appendChild(notificationDiv);
-                }
-            } else {
-                bonusYahtzeeElement.style.backgroundColor = '#f0f8ff';
-                bonusYahtzeeElement.style.color = '#333';
-                bonusYahtzeeElement.parentElement.style.borderColor = '#4CAF50';
-                
-                // Remove notification
-                const notification = bonusYahtzeeElement.parentElement.querySelector('.bonus-notification');
-                if (notification) {
-                    notification.remove();
-                }
-            }
-        }
-    }
+    // Bonus Yahtzee is now only displayed in individual player scorecards
+    // This function is kept for compatibility but no longer needs to do anything
+    // since the bonus display is handled in createScorecardElement()
 }
 
 function clearAllScores() {
@@ -802,6 +781,12 @@ function clearAllScores() {
             scoreElement.style.color = '#4CAF50';
         }
     });
+    
+    // Hide bonus Yahtzee row when clearing scores
+    const bonusYahtzeeItem = document.getElementById('bonus-yahtzee-item');
+    if (bonusYahtzeeItem) {
+        bonusYahtzeeItem.style.display = 'none';
+    }
 }
 
 async function useScore(event) {
@@ -1045,11 +1030,32 @@ async function handleAddScore(event) {
     
     // Check if category already has a score
     if (player.scorecard[category] !== undefined) {
-        alert('This category already has a score. Use the edit button to modify it.');
+        showToast('This category already has a score. Use the edit button to modify it.', 'warning');
         return;
     }
     
+    showAddScoreModal(playerName, category);
+}
+
+function showAddScoreModal(playerName, category) {
+    const modal = document.getElementById('add-score-modal');
+    const playerElement = document.getElementById('add-score-player');
+    const categoryElement = document.getElementById('add-score-category');
+    const scoreInputGroup = document.getElementById('score-input-group');
+    const fixedScoreSection = document.getElementById('fixed-score-section');
+    const scoreInput = document.getElementById('score-input');
+    const fixedScoreValue = document.getElementById('fixed-score-value');
+    const fixedScoreText = document.getElementById('fixed-score-text');
+    const scoreHelp = document.getElementById('score-help');
+    
     const displayName = categoryDisplayNames[category] || category;
+    
+    // Update modal content
+    playerElement.textContent = playerName;
+    categoryElement.textContent = displayName;
+    
+    // Update dice display
+    updateAddScoreDiceDisplay();
     
     // Define set values for specific categories
     const setValues = {
@@ -1062,62 +1068,212 @@ async function handleAddScore(event) {
         'chance': 'Sum of all dice'
     };
     
-    // Define editable categories (upper section + chance)
-    const editableCategories = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes', 'chance'];
-    
-    let promptMessage = `Add score for ${displayName} (${playerName}):\n\n`;
-    let newScore;
-    
-    if (editableCategories.includes(category)) {
-        // Allow manual entry for upper section and chance
-        promptMessage += 'Enter the score you want to add:';
-        newScore = prompt(promptMessage, '');
-        
-        if (newScore === null) return; // User cancelled
-        
-        if (newScore.trim() === '') {
-            alert('Please enter a score or cancel.');
-            return;
-        }
-        
-        const parsedScore = parseInt(newScore);
-        if (isNaN(parsedScore) || parsedScore < 0) {
-            alert('Please enter a valid score (0 or positive number).');
-            return;
-        }
-        
-        await addScoreToServer(playerName, category, parsedScore);
-        
-    } else {
-        // For categories with set values, show the set value and ask for confirmation
-        const setValue = setValues[category];
-        if (setValue === 'Sum of all dice') {
-            promptMessage += `This category uses the sum of all dice.\nEnter the sum of your dice:`;
-            newScore = prompt(promptMessage, '');
+    // Check if this is a bonus Yahtzee
+    if (category === 'yahtzee' && currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === playerName);
+        if (player && player.scorecard) {
+            const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
+            const dice = getDiceValues();
+            const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
             
-            if (newScore === null) return; // User cancelled
-            
-            if (newScore.trim() === '') {
-                alert('Please enter the sum of your dice or cancel.');
-                return;
-            }
-            
-            const parsedScore = parseInt(newScore);
-            if (isNaN(parsedScore) || parsedScore < 5 || parsedScore > 30) {
-                alert('Please enter a valid sum of dice (5-30).');
-                return;
-            }
-            
-            await addScoreToServer(playerName, category, parsedScore);
-            
-        } else {
-            // Fixed value categories
-            promptMessage += `This category has a fixed value of ${setValue} points.\nAdd this score?`;
-            if (confirm(promptMessage)) {
-                await addScoreToServer(playerName, category, setValue);
+            // If player already has a Yahtzee and current roll is also a Yahtzee, it's worth 100
+            if (hasYahtzee && isCurrentRollYahtzee) {
+                setValues.yahtzee = 100;
             }
         }
     }
+    
+    // Define editable categories (upper section + chance)
+    const editableCategories = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes', 'chance'];
+    
+    if (editableCategories.includes(category)) {
+        // Show input field for manual entry
+        scoreInputGroup.style.display = 'block';
+        fixedScoreSection.style.display = 'none';
+        
+        // Set appropriate max values and help text
+        if (category === 'chance') {
+            scoreInput.max = 30;
+            scoreHelp.textContent = 'Enter the sum of all dice (5-30)';
+        } else {
+            scoreInput.max = 30;
+            scoreHelp.textContent = `Enter points for ${displayName} (0-30)`;
+        }
+        
+        scoreInput.value = '';
+        scoreInput.focus();
+        
+    } else {
+        const setValue = setValues[category];
+        
+        if (setValue === 'Sum of all dice') {
+            // Show input field for sum of dice
+            scoreInputGroup.style.display = 'block';
+            fixedScoreSection.style.display = 'none';
+            
+            scoreInput.min = 5;
+            scoreInput.max = 30;
+            scoreInput.value = '';
+            scoreHelp.textContent = 'Enter the sum of all your dice (5-30)';
+            scoreInput.focus();
+            
+        } else {
+            // Show fixed value
+            scoreInputGroup.style.display = 'none';
+            fixedScoreSection.style.display = 'block';
+            
+            fixedScoreValue.textContent = setValue;
+            fixedScoreText.textContent = `${displayName} has a fixed value of ${setValue} points.`;
+        }
+    }
+    
+    // Store current modal data
+    modal.dataset.playerName = playerName;
+    modal.dataset.category = category;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function updateAddScoreDiceDisplay() {
+    const addScoreDice = document.getElementById('add-score-dice');
+    if (!addScoreDice) return;
+    
+    const dice = getDiceValues();
+    addScoreDice.innerHTML = '';
+    
+    dice.forEach((value, index) => {
+        const die = document.createElement('div');
+        die.className = 'confirmation-die';
+        
+        if (value > 0) {
+            die.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
+        } else {
+            die.innerHTML = '<i class="fas fa-question"></i>';
+        }
+        
+        if (diceFrozen[index]) {
+            die.classList.add('frozen');
+        }
+        
+        addScoreDice.appendChild(die);
+    });
+}
+
+function closeAddScoreModal() {
+    const modal = document.getElementById('add-score-modal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    
+    // Clear form
+    const scoreInput = document.getElementById('score-input');
+    scoreInput.value = '';
+}
+
+async function confirmAddScore() {
+    const modal = document.getElementById('add-score-modal');
+    const playerName = modal.dataset.playerName;
+    const category = modal.dataset.category;
+    const scoreInput = document.getElementById('score-input');
+    const fixedScoreSection = document.getElementById('fixed-score-section');
+    const fixedScoreValue = document.getElementById('fixed-score-value');
+    
+    let score;
+    
+    if (fixedScoreSection.style.display === 'none') {
+        // User input required
+        const inputValue = scoreInput.value.trim();
+        
+        if (!inputValue) {
+            showToast('Please enter a score', 'warning');
+            scoreInput.focus();
+            return;
+        }
+        
+        score = parseInt(inputValue);
+        
+        if (isNaN(score) || score < 0) {
+            showToast('Please enter a valid score (0 or positive number)', 'error');
+            scoreInput.focus();
+            return;
+        }
+        
+        // Validate range based on category
+        const min = parseInt(scoreInput.min) || 0;
+        const max = parseInt(scoreInput.max) || 50;
+        
+        if (score < min || score > max) {
+            showToast(`Score must be between ${min} and ${max}`, 'error');
+            scoreInput.focus();
+            return;
+        }
+        
+    } else {
+        // Fixed value
+        score = parseInt(fixedScoreValue.textContent);
+    }
+    
+    try {
+        await addScoreToServer(playerName, category, score);
+        closeAddScoreModal();
+        
+        const displayName = categoryDisplayNames[category] || category;
+        showToast(`Score added: ${score} points for ${displayName}!`, 'success');
+        
+    } catch (error) {
+        console.error('Error adding score:', error);
+        showToast('Error adding score. Please try again.', 'error');
+    }
+}
+
+function initializeAddScoreModal() {
+    const modal = document.getElementById('add-score-modal');
+    const closeBtn = document.getElementById('close-add-score-modal');
+    const cancelBtn = document.getElementById('cancel-add-score');
+    const confirmBtn = document.getElementById('confirm-add-score');
+    const scoreInput = document.getElementById('score-input');
+    
+    // Close button handlers
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeAddScoreModal);
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeAddScoreModal);
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmAddScore);
+    }
+    
+    // Enter key support in input
+    if (scoreInput) {
+        scoreInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmAddScore();
+            }
+        });
+    }
+    
+    // Click outside to close
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeAddScoreModal();
+            }
+        });
+    }
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeAddScoreModal();
+        }
+    });
 }
 
 async function addScoreToServer(playerName, category, score) {
@@ -1220,6 +1376,24 @@ function createScorecardElement(player) {
                 `}
             </div>
         `;
+        
+        // Add Yahtzee bonus row after Yahtzee but before Chance
+        if (category.name === 'yahtzee') {
+            const bonusYahtzees = player.scorecard.bonusYahtzees || 0;
+            const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
+            
+            if (bonusYahtzees > 0 || hasYahtzee) {
+                html += `
+                    <div class="scorecard-item bonus-yahtzee-item">
+                        <span>Bonus Yahtzee</span>
+                        <span>${bonusYahtzees > 0 ? `${bonusYahtzees} × 100 = ${bonusYahtzees * 100}` : '0'}</span>
+                        <div class="scorecard-actions">
+                            <!-- No actions for bonus Yahtzee as it's automatic -->
+                        </div>
+                    </div>
+                `;
+            }
+        }
     });
     
     html += '</div>';
@@ -2011,11 +2185,24 @@ function showScoreConfirmationDialog(category, score, dice) {
     // Update category display
     selectedCategory.textContent = categoryDisplayNames[category] || category;
     
-    // Update score display
-    scorePoints.textContent = score;
+    // Update score display - check for bonus Yahtzee
+    let displayScore = score;
+    if (category === 'yahtzee' && currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            const hasYahtzee = player.scorecard.yahtzee !== undefined && player.scorecard.yahtzee > 0;
+            const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
+            
+            // If player already has a Yahtzee and current roll is also a Yahtzee, show 100
+            if (hasYahtzee && isCurrentRollYahtzee && score === 50) {
+                displayScore = 100;
+            }
+        }
+    }
+    scorePoints.textContent = displayScore;
     
     // Update score description based on category
-    scoreDescription.textContent = getScoreDescription(category, score, dice);
+    scoreDescription.textContent = getScoreDescription(category, displayScore, dice);
     
     // Update player info
     confirmationPlayer.textContent = currentPlayer;
@@ -2066,7 +2253,7 @@ function getScoreDescription(category, score, dice) {
         'fullHouse': score > 0 ? 'Three of one number + pair of another' : 'No full house found',
         'smallStraight': score > 0 ? 'Four consecutive numbers' : 'No small straight found',
         'largeStraight': score > 0 ? 'Five consecutive numbers' : 'No large straight found',
-        'yahtzee': score > 0 ? 'All five dice show the same number!' : 'No Yahtzee found',
+        'yahtzee': score > 0 ? (score === 100 ? 'All five dice show the same number! (Bonus Yahtzee)' : 'All five dice show the same number!') : 'No Yahtzee found',
         'chance': `Sum of all dice: ${dice.reduce((a, b) => a + b, 0)}`
     };
     

@@ -237,11 +237,6 @@
                                         <span class="score" id="yahtzee-score">0</span>
                                         <button class="use-score-btn" data-category="yahtzee">Use</button>
                                     </div>
-                                    <div class="score-item bonus-yahtzee-item" style="background-color: #f0f8ff; border-left: 4px solid #4CAF50;">
-                                        <span class="category-name">Bonus Yahtzees</span>
-                                        <span class="score" id="bonus-yahtzee-score">0 × 100 = 0</span>
-                                        <span class="score-info">Auto-awarded</span>
-                                    </div>
                                     <div class="score-item" data-category="chance">
                                         <span class="category-name">Chance</span>
                                         <span class="score" id="chance-score">0</span>
@@ -366,6 +361,61 @@
             <div class="modal-footer">
                 <button id="cancel-score" class="btn btn-tertiary">Cancel</button>
                 <button id="confirm-score" class="btn btn-primary">Confirm & Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Score Modal -->
+    <div class="modal-overlay" id="add-score-modal" role="dialog" aria-labelledby="add-score-modal-title" aria-modal="true" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="add-score-modal-title">Add Score</h3>
+                <button class="modal-close" id="close-add-score-modal" aria-label="Close add score dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="add-score-form">
+                    <div class="score-info">
+                        <div class="player-category">
+                            <span class="label">Player:</span>
+                            <span id="add-score-player">Player Name</span>
+                        </div>
+                        <div class="player-category">
+                            <span class="label">Category:</span>
+                            <span id="add-score-category">Category Name</span>
+                        </div>
+                    </div>
+                    
+                    <div class="current-dice-display">
+                        <h4>Your Dice:</h4>
+                        <div class="add-score-dice" id="add-score-dice">
+                            <!-- Dice will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="score-input-section">
+                        <div id="score-input-group" class="input-group">
+                            <label for="score-input">Enter score:</label>
+                            <input type="number" id="score-input" min="0" max="50" aria-describedby="score-help">
+                            <small id="score-help" class="input-help">Enter the points for this category</small>
+                        </div>
+                        
+                        <div id="fixed-score-section" class="fixed-score" style="display: none;">
+                            <div class="fixed-score-info">
+                                <span class="label">Points:</span>
+                                <span id="fixed-score-value">25</span>
+                            </div>
+                            <div class="fixed-score-description">
+                                <span id="fixed-score-text">This category has a fixed point value.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-add-score" class="btn btn-tertiary">Cancel</button>
+                <button id="confirm-add-score" class="btn btn-primary">Add Score</button>
             </div>
         </div>
     </div>
