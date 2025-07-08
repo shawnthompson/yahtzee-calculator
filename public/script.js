@@ -346,6 +346,9 @@ function updateActivePlayerTab() {
 function updateUseScoreButtons(scorecard) {
     document.querySelectorAll('.use-score-btn').forEach(btn => {
         const category = btn.dataset.category;
+        const categoryName = categoryDisplayNames[category] || category;
+        const scoreElement = document.getElementById(`${category}-score`);
+        const currentScore = currentScores[category] || 0;
         
         // Special handling for Yahtzee - allow multiple if current roll is a Yahtzee
         if (category === 'yahtzee' && scorecard[category] !== undefined) {
@@ -354,25 +357,60 @@ function updateUseScoreButtons(scorecard) {
             
             if (isCurrentRollYahtzee) {
                 btn.disabled = false;
-                btn.textContent = 'Bonus!';
+                btn.innerHTML = '<i class="fas fa-star" aria-hidden="true"></i> Bonus!';
                 btn.style.backgroundColor = '#ffc107';
                 btn.style.color = '#000';
+                btn.setAttribute('aria-label', `Score bonus Yahtzee for ${currentScore} points in ${categoryName}`);
+                btn.className = 'use-score-btn bonus-available';
             } else {
                 btn.disabled = true;
-                btn.textContent = 'Used';
+                btn.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Used';
                 btn.style.backgroundColor = '';
                 btn.style.color = '';
+                btn.setAttribute('aria-label', `${categoryName} already used`);
+                btn.className = 'use-score-btn used';
             }
         } else if (scorecard[category] !== undefined) {
             btn.disabled = true;
-            btn.textContent = 'Used';
+            btn.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Used';
             btn.style.backgroundColor = '';
             btn.style.color = '';
+            btn.setAttribute('aria-label', `${categoryName} already used`);
+            btn.className = 'use-score-btn used';
         } else {
-            btn.disabled = false;
-            btn.textContent = 'Use';
-            btn.style.backgroundColor = '';
-            btn.style.color = '';
+            // Check if dice are entered before enabling buttons
+            const dice = getDiceValues();
+            const allDiceEntered = dice.every(d => d > 0);
+            
+            if (!allDiceEntered) {
+                // No dice entered yet - disable button and show neutral text
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-dice" aria-hidden="true"></i> Roll Dice';
+                btn.className = 'use-score-btn';
+                btn.setAttribute('aria-label', `Roll dice to see ${categoryName} score`);
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            } else {
+                // Dice are entered - show appropriate action
+                btn.disabled = false;
+                
+                let buttonClass = 'use-score-btn';
+                let ariaLabel = `Score ${currentScore} points in ${categoryName}`;
+                
+                if (currentScore > 0) {
+                    buttonClass += ' available-score';
+                    ariaLabel += ' - Available option';
+                    btn.innerHTML = `<i class="fas fa-plus" aria-hidden="true"></i> Score`;
+                } else {
+                    buttonClass += ' zero-score';
+                    ariaLabel += ' - Zero points option';
+                    btn.innerHTML = `<i class="fas fa-times" aria-hidden="true"></i> Take 0`;
+                }
+                btn.className = buttonClass;
+                btn.setAttribute('aria-label', ariaLabel);
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            }
         }
     });
 }
@@ -715,9 +753,48 @@ async function calculateAllScores() {
 }
 
 function updateScoreDisplay(scores) {
+    // Get current player's scorecard to check which categories are used
+    let usedCategories = {};
+    if (currentPlayer && currentGame) {
+        const player = currentGame.players.find(p => p.name === currentPlayer);
+        if (player && player.scorecard) {
+            usedCategories = player.scorecard;
+        }
+    }
+
     Object.keys(scores).forEach(category => {
         const scoreElement = document.getElementById(`${category}-score`);
         if (scoreElement) {
+            // Skip updating score display for used categories
+            if (usedCategories[category] !== undefined) {
+                // Special handling for Yahtzee - show 100 if this is a bonus Yahtzee
+                if (category === 'yahtzee' && currentPlayer && currentGame) {
+                    const player = currentGame.players.find(p => p.name === currentPlayer);
+                    if (player && player.scorecard) {
+                        const dice = getDiceValues();
+                        const isCurrentRollYahtzee = dice.length === 5 && dice.every(d => d === dice[0] && d > 0);
+                        
+                        // If current roll is a Yahtzee and player already has Yahtzee, show 100
+                        if (isCurrentRollYahtzee) {
+                            scoreElement.textContent = '100';
+                            scoreElement.classList.remove('available', 'zero-option', 'used');
+                            scoreElement.classList.add('available');
+                            scoreElement.setAttribute('aria-label', `100 points available for bonus Yahtzee`);
+                            scoreElement.setAttribute('role', 'status');
+                            return;
+                        }
+                    }
+                }
+                
+                // Show "-" for used categories instead of the actual scored value
+                scoreElement.textContent = '-';
+                scoreElement.classList.remove('available', 'zero-option');
+                scoreElement.classList.add('used');
+                scoreElement.setAttribute('aria-label', `already scored in this category`);
+                scoreElement.setAttribute('role', 'status');
+                return;
+            }
+
             let displayScore = scores[category];
             
             // Special handling for Yahtzee - show 100 if this is a bonus Yahtzee
@@ -737,14 +814,20 @@ function updateScoreDisplay(scores) {
             
             scoreElement.textContent = displayScore;
             
-            // Add visual feedback for good scores
+            // Clean functional state display
+            scoreElement.classList.remove('available', 'zero-option', 'used');
+            
             if (displayScore > 0) {
-                scoreElement.style.backgroundColor = '#e8f5e8';
-                scoreElement.style.color = '#2e7d32';
+                // Available category with points
+                scoreElement.classList.add('available');
+                scoreElement.setAttribute('aria-label', `${displayScore} points available in this category`);
             } else {
-                scoreElement.style.backgroundColor = '#ffebee';
-                scoreElement.style.color = '#c62828';
+                // Available category but would score zero
+                scoreElement.classList.add('zero-option');
+                scoreElement.setAttribute('aria-label', `0 points - strategic option available`);
             }
+            
+            scoreElement.setAttribute('role', 'status');
         }
     });
     
@@ -776,9 +859,10 @@ function clearAllScores() {
     categories.forEach(category => {
         const scoreElement = document.getElementById(`${category}-score`);
         if (scoreElement) {
-            scoreElement.textContent = '0';
-            scoreElement.style.backgroundColor = '#e8f5e8';
-            scoreElement.style.color = '#4CAF50';
+            scoreElement.textContent = '-';
+            scoreElement.classList.remove('available', 'zero-option');
+            scoreElement.removeAttribute('aria-label');
+            scoreElement.removeAttribute('role');
         }
     });
     
@@ -818,6 +902,8 @@ async function useScore(event) {
 // Submit score to server (called after confirmation)
 async function submitScore(category, score, dice) {
     try {
+        console.log('Submitting score:', { category, score, dice, currentPlayer, gameId: currentGame.gameId });
+        
         const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
             method: 'POST',
             headers: {
@@ -832,8 +918,10 @@ async function submitScore(category, score, dice) {
         });
         
         const data = await response.json();
+        console.log('Server response:', data);
         
         if (data.error) {
+            console.error('Server error details:', data);
             alert('Error recording score: ' + data.error);
             return;
         }
@@ -1744,7 +1832,7 @@ function resetCurrentGame() {
         // Reset use score buttons
         document.querySelectorAll('.use-score-btn').forEach(btn => {
             btn.disabled = false;
-            btn.textContent = 'Use';
+            btn.textContent = 'Score';
         });
         
         alert('Game reset successfully!');

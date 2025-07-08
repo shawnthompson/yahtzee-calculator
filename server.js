@@ -269,13 +269,17 @@ app.post('/api/game/:gameId/score', (req, res) => {
     const { gameId } = req.params;
     const { playerName, category, score, dice } = req.body;
     
+    console.log('Score submission received:', { gameId, playerName, category, score, dice });
+    
     const game = gameSessions[gameId];
     if (!game) {
+      console.log('Game not found:', gameId);
       return res.status(404).json({ error: 'Game not found' });
     }
 
     const player = game.players.find(p => p.name === playerName);
     if (!player) {
+      console.log('Player not found:', playerName, 'in game with players:', game.players.map(p => p.name));
       return res.status(404).json({ error: 'Player not found' });
     }
 
@@ -314,6 +318,8 @@ app.post('/api/game/:gameId/score', (req, res) => {
       bonusPoints
     });
   } catch (error) {
+    console.error('Error in score submission:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Server error updating score.' });
   }
 });

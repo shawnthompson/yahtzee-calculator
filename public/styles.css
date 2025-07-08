@@ -537,36 +537,205 @@ input[required] + .input-help {
     flex: 1;
 }
 
+/* Score display functional states */
 .score {
     font-weight: bold;
     font-size: 1.2em;
-    color: var(--primary-color);
-    background: #e8f5e8;
-    padding: 4px 8px;
-    border-radius: 4px;
-    min-width: 40px;
+    padding: 8px 12px;
+    margin: 4px 0;
+    border-radius: 8px;
     text-align: center;
-    margin-right: 10px;
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background: #f5f5f5;
+    color: #666;
+}
+
+/* Available category with points */
+.score.available {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border-color: #4caf50;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+/* Available category but would score zero */
+.score.zero-option {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    color: #e65100;
+    border: 2px dashed #ff9800;
+    font-style: italic;
+    position: relative;
+}
+
+.score.zero-option::after {
+    content: "0";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff9800;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Used score - category already scored */
+.score.used {
+    background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
+    color: #1565c0;
+    border: 2px solid #2196f3;
+    opacity: 1;
+    font-weight: bold;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(33, 150, 243, 0.2);
+}
+
+.score.used::before {
+    content: "✓";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #2196f3;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.scorecard-item.used {
+    background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
+    border-left: 6px solid #2196f3;
+    opacity: 1;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(33, 150, 243, 0.15);
+}
+
+.scorecard-item.used::before {
+    content: "✓";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #2196f3;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.scorecard-item.used span:last-of-type {
+    color: #1565c0;
+    font-weight: bold;
 }
 
 .use-score-btn {
-    padding: 4px 8px;
+    padding: 6px 12px;
     background: var(--accent-color);
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 5px;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
+    display: flex; /* Show buttons, but they'll be disabled until dice are entered */
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+    justify-content: center;
+    border: 2px solid transparent;
+    margin-left: 12px;
 }
 
 .use-score-btn:hover {
     background: #f57c00;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .use-score-btn:disabled {
     background: #ccc;
     cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Button color scheme: Score (green), Take 0 (red), Used (grey) */
+.use-score-btn.available-score {
+    background: var(--primary-color); /* Green for "Score" */
+    border-color: #2e7d32;
+}
+
+.use-score-btn.available-score:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
+}
+
+.use-score-btn.zero-score {
+    background: var(--error-color); /* Red for "Take 0" */
+    border-color: #d32f2f;
+}
+
+.use-score-btn.zero-score:hover {
+    background: #d32f2f;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(244, 67, 54, 0.3);
+}
+
+.use-score-btn.bonus-available {
+    background: #ffc107;
+    color: #000;
+    border-color: #ff8f00;
+    font-weight: bold;
+    animation: bonus-pulse 1.5s ease-in-out infinite;
+}
+
+.use-score-btn.used {
+    background: #9e9e9e; /* Grey for "Used" */
+    color: white;
+    border: 2px solid #757575;
+    opacity: 1;
+    position: relative;
+    cursor: default;
+    box-shadow: 0 2px 4px rgba(158, 158, 158, 0.3);
+}
+
+.use-score-btn.used::before {
+    content: "✓";
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+.use-score-btn.used:hover {
+    background: #9e9e9e;
+    transform: none;
+    cursor: default;
+}
+
+/* Animations for enhanced visual feedback */
+@keyframes bonus-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
 .dice-display {
@@ -673,11 +842,6 @@ input[required] + .input-help {
     background: white;
     border-radius: 3px;
     border: 1px solid #eee;
-}
-
-.scorecard-item.used {
-    background: #e8f5e8;
-    border-color: var(--primary-color);
 }
 
 .scorecard-actions {
