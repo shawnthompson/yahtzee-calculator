@@ -93,6 +93,7 @@
                         </div>
                     </div>
                     <div class="game-actions">
+                        <button id="view-scorecards" class="btn btn-primary"><i class="fas fa-table"></i> View Scorecards</button>
                         <button id="save-game" class="btn btn-tertiary">💾 Save Game</button>
                         <button id="reset-game" class="btn btn-tertiary"><i class="fas fa-redo"></i> Reset Game</button>
                         <button id="new-game" class="btn btn-secondary"><i class="fas fa-plus"></i> New Game</button>
@@ -387,13 +388,6 @@
                         </div>
                     </div>
                     
-                    <div class="current-dice-display">
-                        <h4>Your Dice:</h4>
-                        <div class="add-score-dice" id="add-score-dice">
-                            <!-- Dice will be populated by JavaScript -->
-                        </div>
-                    </div>
-                    
                     <div class="score-input-section">
                         <div id="score-input-group" class="input-group">
                             <label for="score-input">Enter score:</label>
@@ -416,6 +410,31 @@
             <div class="modal-footer">
                 <button id="cancel-add-score" class="btn btn-tertiary">Cancel</button>
                 <button id="confirm-add-score" class="btn btn-primary">Add Score</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scorecard Modal -->
+    <div id="scorecards-modal" class="modal-overlay large-modal" style="display: none;" aria-hidden="true" role="dialog" aria-labelledby="scorecards-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="scorecards-modal-title">📊 Player Scorecards</h2>
+                <button id="close-scorecards-modal" class="modal-close" aria-label="Close scorecards dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="scorecard-tabs">
+                    <div id="scorecard-player-tabs" class="scorecard-tab-buttons">
+                        <!-- Player tabs will be populated dynamically -->
+                    </div>
+                </div>
+                <div id="scorecard-modal-container" class="scorecard-display">
+                    <!-- Active player's scorecard will be displayed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-scorecards" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>

@@ -1193,6 +1193,20 @@ footer p {
     box-sizing: border-box;
 }
 
+/* Modal layering - ensure proper stacking order */
+#scorecards-modal {
+    z-index: 1000; /* Base layer for scorecard modal */
+}
+
+#add-score-modal,
+#die-edit-modal {
+    z-index: 1100; /* Higher layer for secondary modals */
+}
+
+#score-confirmation-modal {
+    z-index: 1200; /* Highest layer for confirmation dialogs */
+}
+
 .modal-content {
     background: var(--card-background);
     border-radius: 12px;
@@ -1409,4 +1423,68 @@ footer p {
     .modal-footer {
         flex-direction: column;
     }
+}
+
+/* Scorecard Modal Styles */
+.scorecard-tabs {
+    margin-bottom: 20px;
+}
+
+.scorecard-tab-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.scorecard-tab-btn {
+    padding: 8px 16px;
+    background: var(--card-background);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.scorecard-tab-btn:hover {
+    background: var(--background-color);
+    border-color: var(--primary-color);
+}
+
+.scorecard-tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.scorecard-display {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.large-modal .modal-content {
+    max-width: 800px;
+    width: 90vw;
+}
+
+/* Enhanced scorecard styling in modal */
+.scorecard-display .scorecard {
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+}
+
+.scorecard-display .scorecard h3 {
+    font-size: 1.4em;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+    padding: 10px;
+    background: var(--background-color);
+    border-radius: 8px;
 }

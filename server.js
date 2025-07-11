@@ -233,7 +233,7 @@ app.post('/api/game/create', (req, res) => {
     
     const gameId = generateGameId();
     const gameData = {
-      id: gameId,
+      gameId: gameId,
       players: players.map(name => ({
         name: name.trim(),
         scorecard: {},
@@ -243,7 +243,7 @@ app.post('/api/game/create', (req, res) => {
     };
     
     gameSessions[gameId] = gameData;
-    res.json({ gameId, players: gameData.players });
+    res.json(gameData);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating game.' });
   }

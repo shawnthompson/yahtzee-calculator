@@ -142,6 +142,7 @@ function initializeApp() {
     const newGameBtn = document.getElementById('new-game');
     const resetGameBtn = document.getElementById('reset-game');
     const saveGameBtn = document.getElementById('save-game');
+    const viewScorecardsBtn = document.getElementById('view-scorecards');
     const playerTabsContainer = document.getElementById('player-tabs');
     const rollDiceBtn = document.getElementById('roll-dice');
     const resetDiceBtn = document.getElementById('reset-dice');
@@ -171,6 +172,7 @@ function initializeApp() {
     newGameBtn.addEventListener('click', resetToSetup);
     resetGameBtn.addEventListener('click', resetCurrentGame);
     saveGameBtn.addEventListener('click', saveGameState);
+    viewScorecardsBtn.addEventListener('click', showScorecardModal);
     rollDiceBtn.addEventListener('click', rollRandomDice);
     resetDiceBtn.addEventListener('click', resetDice);
     
@@ -217,6 +219,9 @@ function initializeApp() {
     
     // Initialize add score modal
     initializeAddScoreModal();
+    
+    // Initialize scorecard modal
+    initializeScorecardModal();
     
     // Initialize virtual dice display
     updateRollsDisplay();
@@ -280,7 +285,7 @@ function setupGamePlay() {
     // Hide setup, show game play
     document.getElementById('game-setup').style.display = 'none';
     document.getElementById('game-play').style.display = 'block';
-    document.getElementById('player-scorecards').style.display = 'block';
+    document.getElementById('player-scorecards').style.display = 'none'; // Hidden - using modal instead
     document.getElementById('leaderboard').style.display = 'block';
     
     // Create player tabs
@@ -874,7 +879,16 @@ function clearAllScores() {
 }
 
 async function useScore(event) {
-    const category = event.target.dataset.category;
+    // Use currentTarget (the element with the event listener) instead of target
+    // This handles cases where the click might be on a child element
+    const button = event.currentTarget;
+    const category = button.dataset.category;
+    
+    if (!category) {
+        console.error('No category found on button!', button);
+        alert('Error: No category specified for this button');
+        return;
+    }
     
     if (!currentPlayer) {
         alert('Please select a player first!');
@@ -923,7 +937,7 @@ async function submitScore(category, score, dice) {
         if (data.error) {
             console.error('Server error details:', data);
             alert('Error recording score: ' + data.error);
-            return;
+            throw new Error(data.error);
         }
         
         // Update the current game data
@@ -994,124 +1008,183 @@ function updateScorecardsDisplay() {
     });
 }
 
-async function handleEditScore(event) {
-    const playerName = event.target.dataset.player;
-    const category = event.target.dataset.category;
-    const player = currentGame.players.find(p => p.name === playerName);
+// Scorecard Modal Functions
+function initializeScorecardModal() {
+    const viewScorecardsBtn = document.getElementById('view-scorecards');
+    const modal = document.getElementById('scorecards-modal');
+    const closeBtn = document.getElementById('close-scorecards-modal');
+    const closeBtn2 = document.getElementById('close-scorecards');
     
-    if (!player) return;
+    // View scorecards button handler
+    if (viewScorecardsBtn) {
+        viewScorecardsBtn.addEventListener('click', showScorecardModal);
+    }
     
-    const currentScore = player.scorecard[category];
-    const displayName = categoryDisplayNames[category] || category;
+    // Close button handlers
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeScorecardModal);
+    }
     
-    const newScore = prompt(
-        `Edit score for ${displayName} (${playerName}):\n\nCurrent score: ${currentScore}`,
-        currentScore
-    );
+    if (closeBtn2) {
+        closeBtn2.addEventListener('click', closeScorecardModal);
+    }
     
-    if (newScore === null) return; // User cancelled
+    // Click outside to close
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeScorecardModal();
+            }
+        });
+    }
     
-    const parsedScore = parseInt(newScore);
-    if (isNaN(parsedScore) || parsedScore < 0) {
-        alert('Please enter a valid score (0 or positive number).');
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+            closeScorecardModal();
+        }
+    });
+}
+
+function showScorecardModal() {
+    if (!currentGame || !currentGame.players || currentGame.players.length === 0) {
+        showToast('No game in progress or no players found!', 'warning');
         return;
     }
     
-    // Update the score on the server
-    try {
-        const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                playerName: playerName,
-                category: category,
-                score: parsedScore
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            alert('Error updating score: ' + data.error);
-            return;
-        }
-        
-        // Update the current game data
-        player.scorecard = data.scorecard;
-        player.finalScore = data.finalScore;
-        
-        // Update displays
-        updateScorecardsDisplay();
-        updateLeaderboard();
-        
-        alert(`Score updated: ${parsedScore} points for ${displayName}!`);
-        
-    } catch (error) {
-        console.error('Error updating score:', error);
-        alert('Error updating score. Please try again.');
+    const modal = document.getElementById('scorecards-modal');
+    const tabsContainer = document.getElementById('scorecard-player-tabs');
+    const modalContainer = document.getElementById('scorecard-modal-container');
+    
+    // Clear and populate player tabs
+    tabsContainer.innerHTML = '';
+    currentGame.players.forEach((player, index) => {
+        const tabBtn = document.createElement('button');
+        tabBtn.className = `scorecard-tab-btn ${index === 0 ? 'active' : ''}`;
+        tabBtn.textContent = player.name;
+        tabBtn.dataset.playerName = player.name;
+        tabBtn.addEventListener('click', () => switchScorecardTab(player.name));
+        tabsContainer.appendChild(tabBtn);
+    });
+    
+    // Show the first player's scorecard by default
+    if (currentGame.players.length > 0) {
+        displayPlayerScorecard(currentGame.players[0]);
     }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    
+    // Announce to screen readers
+    announceToScreenReader('Scorecards dialog opened');
 }
 
-async function handleClearScore(event) {
-    const playerName = event.target.dataset.player;
-    const category = event.target.dataset.category;
+function switchScorecardTab(playerName) {
     const player = currentGame.players.find(p => p.name === playerName);
-    
     if (!player) return;
     
-    const displayName = categoryDisplayNames[category] || category;
-    const currentScore = player.scorecard[category];
-    
-    if (!confirm(`Clear ${displayName} score for ${playerName}?\n\nCurrent score: ${currentScore}\n\nThis action cannot be undone.`)) {
-        return;
-    }
-    
-    // Clear the score on the server
-    try {
-        const response = await fetch(`/api/game/${currentGame.gameId}/clear-score`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                playerName: playerName,
-                category: category
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            alert('Error clearing score: ' + data.error);
-            return;
+    // Update active tab
+    const tabs = document.querySelectorAll('.scorecard-tab-btn');
+    tabs.forEach(tab => {
+        if (tab.dataset.playerName === playerName) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
         }
-        
-        // Update the current game data
-        player.scorecard = data.scorecard;
-        player.finalScore = data.finalScore;
-        
-        // Update displays
-        updateScorecardsDisplay();
-        updateLeaderboard();
-        
-        // Update use score buttons if this is the current player
-        if (playerName === currentPlayer) {
-            updateUseScoreButtons(data.scorecard);
-        }
-        
-        alert(`${displayName} score cleared for ${playerName}!`);
-        
-    } catch (error) {
-        console.error('Error clearing score:', error);
-        alert('Error clearing score. Please try again.');
-    }
+    });
+    
+    // Display the selected player's scorecard
+    displayPlayerScorecard(player);
 }
 
-async function handleAddScore(event) {
-    const playerName = event.target.dataset.player;
-    const category = event.target.dataset.category;
+function displayPlayerScorecard(player) {
+    const container = document.getElementById('scorecard-modal-container');
+    if (!container) return;
+    
+    // Use the existing createScorecardElement function
+    const scorecardElement = createScorecardElement(player);
+    
+    // Clear container and add the scorecard
+    container.innerHTML = '';
+    container.appendChild(scorecardElement);
+    
+    // Re-attach event listeners for the buttons in the modal
+    container.querySelectorAll('.edit-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleEditScore);
+    });
+    
+    container.querySelectorAll('.clear-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleClearScore);
+    });
+    
+    container.querySelectorAll('.add-score-btn').forEach(btn => {
+        btn.addEventListener('click', handleAddScore);
+    });
+}
+
+function closeScorecardModal() {
+    const modal = document.getElementById('scorecards-modal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    
+    // Announce to screen readers
+    announceToScreenReader('Scorecards dialog closed');
+}
+
+// Add Score Modal Functions
+function initializeAddScoreModal() {
+    const modal = document.getElementById('add-score-modal');
+    const closeBtn = document.getElementById('close-add-score-modal');
+    const cancelBtn = document.getElementById('cancel-add-score');
+    const confirmBtn = document.getElementById('confirm-add-score');
+    const scoreInput = document.getElementById('score-input');
+    
+    // Close button handlers
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeAddScoreModal);
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeAddScoreModal);
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmAddScore);
+    }
+    
+    // Enter key support in input
+    if (scoreInput) {
+        scoreInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmAddScore();
+            }
+        });
+    }
+    
+    // Click outside to close
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeAddScoreModal();
+            }
+        });
+    }
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+            closeAddScoreModal();
+        }
+    });
+}
+
+function handleAddScore(event) {
+    const playerName = event.currentTarget.dataset.player;
+    const category = event.currentTarget.dataset.category;
     const player = currentGame.players.find(p => p.name === playerName);
     
     if (!player) return;
@@ -1141,9 +1214,6 @@ function showAddScoreModal(playerName, category) {
     // Update modal content
     playerElement.textContent = playerName;
     categoryElement.textContent = displayName;
-    
-    // Update dice display
-    updateAddScoreDiceDisplay();
     
     // Define set values for specific categories
     const setValues = {
@@ -1225,31 +1295,6 @@ function showAddScoreModal(playerName, category) {
     document.body.style.overflow = 'hidden';
 }
 
-function updateAddScoreDiceDisplay() {
-    const addScoreDice = document.getElementById('add-score-dice');
-    if (!addScoreDice) return;
-    
-    const dice = getDiceValues();
-    addScoreDice.innerHTML = '';
-    
-    dice.forEach((value, index) => {
-        const die = document.createElement('div');
-        die.className = 'confirmation-die';
-        
-        if (value > 0) {
-            die.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
-        } else {
-            die.innerHTML = '<i class="fas fa-question"></i>';
-        }
-        
-        if (diceFrozen[index]) {
-            die.classList.add('frozen');
-        }
-        
-        addScoreDice.appendChild(die);
-    });
-}
-
 function closeAddScoreModal() {
     const modal = document.getElementById('add-score-modal');
     modal.style.display = 'none';
@@ -1317,53 +1362,6 @@ async function confirmAddScore() {
     }
 }
 
-function initializeAddScoreModal() {
-    const modal = document.getElementById('add-score-modal');
-    const closeBtn = document.getElementById('close-add-score-modal');
-    const cancelBtn = document.getElementById('cancel-add-score');
-    const confirmBtn = document.getElementById('confirm-add-score');
-    const scoreInput = document.getElementById('score-input');
-    
-    // Close button handlers
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeAddScoreModal);
-    }
-    
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeAddScoreModal);
-    }
-    
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', confirmAddScore);
-    }
-    
-    // Enter key support in input
-    if (scoreInput) {
-        scoreInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                confirmAddScore();
-            }
-        });
-    }
-    
-    // Click outside to close
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeAddScoreModal();
-            }
-        });
-    }
-    
-    // ESC key to close
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeAddScoreModal();
-        }
-    });
-}
-
 async function addScoreToServer(playerName, category, score) {
     try {
         const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
@@ -1381,8 +1379,7 @@ async function addScoreToServer(playerName, category, score) {
         const data = await response.json();
         
         if (data.error) {
-            alert('Error adding score: ' + data.error);
-            return;
+            throw new Error('Server error: ' + data.error);
         }
         
         // Update the current game data
@@ -1401,12 +1398,127 @@ async function addScoreToServer(playerName, category, score) {
             updateUseScoreButtons(data.scorecard);
         }
         
-        const displayName = categoryDisplayNames[category] || category;
-        alert(`Score added: ${score} points for ${displayName}!`);
+        return data;
         
     } catch (error) {
         console.error('Error adding score:', error);
-        alert('Error adding score. Please try again.');
+        throw error;
+    }
+}
+
+// Edit and Clear Score Functions
+async function handleEditScore(event) {
+    const playerName = event.currentTarget.dataset.player;
+    const category = event.currentTarget.dataset.category;
+    const player = currentGame.players.find(p => p.name === playerName);
+    
+    if (!player) return;
+    
+    const currentScore = player.scorecard[category];
+    const displayName = categoryDisplayNames[category] || category;
+    
+    const newScore = prompt(
+        `Edit score for ${displayName} (${playerName}):\n\nCurrent score: ${currentScore}`,
+        currentScore
+    );
+    
+    if (newScore === null) return; // User cancelled
+    
+    const parsedScore = parseInt(newScore);
+    if (isNaN(parsedScore) || parsedScore < 0) {
+        alert('Please enter a valid score (0 or positive number).');
+        return;
+    }
+    
+    // Update the score on the server
+    try {
+        const response = await fetch(`/api/game/${currentGame.gameId}/score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                category: category,
+                score: parsedScore
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error updating score: ' + data.error);
+            return;
+        }
+        
+        // Update the current game data
+        player.scorecard = data.scorecard;
+        player.finalScore = data.finalScore;
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        alert(`Score updated: ${parsedScore} points for ${displayName}!`);
+        
+    } catch (error) {
+        console.error('Error updating score:', error);
+        alert('Error updating score. Please try again.');
+    }
+}
+
+async function handleClearScore(event) {
+    const playerName = event.currentTarget.dataset.player;
+    const category = event.currentTarget.dataset.category;
+    const player = currentGame.players.find(p => p.name === playerName);
+    
+    if (!player) return;
+    
+    const displayName = categoryDisplayNames[category] || category;
+    const currentScore = player.scorecard[category];
+    
+    if (!confirm(`Clear ${displayName} score for ${playerName}?\n\nCurrent score: ${currentScore}\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    // Clear the score on the server
+    try {
+        const response = await fetch(`/api/game/${currentGame.gameId}/clear-score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                category: category
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error clearing score: ' + data.error);
+            return;
+        }
+        
+        // Update the current game data
+        player.scorecard = data.scorecard;
+        player.finalScore = data.finalScore;
+        
+        // Update displays
+        updateScorecardsDisplay();
+        updateLeaderboard();
+        
+        // Update use score buttons if this is the current player
+        if (playerName === currentPlayer) {
+            updateUseScoreButtons(data.scorecard);
+        }
+        
+        alert(`${displayName} score cleared for ${playerName}!`);
+        
+    } catch (error) {
+        console.error('Error clearing score:', error);
+        alert('Error clearing score. Please try again.');
     }
 }
 
@@ -1840,7 +1952,7 @@ function resetCurrentGame() {
 }
 
 function loadTestDice(event) {
-    const diceString = event.target.dataset.dice;
+    const diceString = event.currentTarget.dataset.dice;
     const diceValues = diceString.split(',').map(Number);
     
     const diceInputs = [
@@ -1994,8 +2106,6 @@ function validateFastInput(event) {
         value = value.substring(0, 11);
     }
     
-    input.value = value;
-    
     // Provide real-time feedback
     const diceValues = parseDiceInput(value);
     if (value.length > 0) {
@@ -2052,6 +2162,54 @@ function attachDieModalListeners() {
     });
 }
 
+function openDieEditModal(dieIndex) {
+    if (dieIndex < 0 || dieIndex > 4) return;
+    
+    const modal = document.getElementById('die-edit-modal');
+    const modalDieDisplay = document.getElementById('modal-die-display');
+    const dieInput = document.getElementById(`die${dieIndex + 1}`);
+    const lockButton = document.getElementById('toggle-die-lock');
+    const lockText = document.getElementById('lock-text');
+    const lockIcon = lockButton.querySelector('i');
+    
+    if (!modal || !modalDieDisplay || !dieInput) return;
+    
+    // Store which die we're editing
+    currentEditingDie = dieIndex;
+    
+    // Update modal display
+    const currentValue = parseInt(dieInput.value) || 0;
+    if (currentValue > 0) {
+        modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(currentValue)}"></i>`;
+        modalDieDisplay.style.backgroundColor = '#4CAF50';
+        modalDieDisplay.style.color = 'white';
+    } else {
+        modalDieDisplay.innerHTML = '<i class="fas fa-question"></i>';
+        modalDieDisplay.style.backgroundColor = 'white';
+        modalDieDisplay.style.color = '#333';
+    }
+    
+    // Update lock button state
+    const isLocked = diceFrozen[dieIndex];
+    if (isLocked) {
+        lockIcon.className = 'fas fa-lock';
+        lockText.textContent = 'Unlock Die';
+        lockButton.classList.add('locked');
+    } else {
+        lockIcon.className = 'fas fa-unlock';
+        lockText.textContent = 'Lock Die';
+        lockButton.classList.remove('locked');
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    
+    // Announce to screen readers
+    announceToScreenReader(`Die ${dieIndex + 1} editor opened. Current value: ${currentValue || 'empty'}`);
+}
+
 function initializeDieEditModal() {
     console.log('Initializing die edit modal...');
     const modal = document.getElementById('die-edit-modal');
@@ -2059,26 +2217,28 @@ function initializeDieEditModal() {
     const doneBtn = document.getElementById('close-die-editor');
     const toggleLockBtn = document.getElementById('toggle-die-lock');
     
-    console.log('Modal elements:', { modal: !!modal, closeBtn: !!closeBtn, doneBtn: !!doneBtn, toggleLockBtn: !!toggleLockBtn });
-    
-    // Initial attachment of die listeners
-    attachDieModalListeners();
-    
-    // Modal close handlers
+    // Close button handlers
     if (closeBtn) {
-        console.log('Adding close button listener');
-        closeBtn.addEventListener('click', (e) => {
-            console.log('Close button clicked');
-            closeDieEditModal();
-        });
+        closeBtn.addEventListener('click', closeDieEditModal);
     }
+    
     if (doneBtn) {
-        console.log('Adding done button listener');
-        doneBtn.addEventListener('click', (e) => {
-            console.log('Done button clicked');
-            closeDieEditModal();
-        });
+        doneBtn.addEventListener('click', closeDieEditModal);
     }
+    
+    // Lock/unlock button handler
+    if (toggleLockBtn) {
+        toggleLockBtn.addEventListener('click', toggleCurrentDieLock);
+    }
+    
+    // Die value button handlers
+    const dieValueButtons = document.querySelectorAll('.die-value-btn');
+    dieValueButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const value = parseInt(e.target.closest('.die-value-btn').dataset.value);
+            setCurrentDieValue(value);
+        });
+    });
     
     // Click outside to close
     if (modal) {
@@ -2091,166 +2251,87 @@ function initializeDieEditModal() {
     
     // ESC key to close
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
             closeDieEditModal();
         }
     });
-    
-    // Die value buttons
-    const dieValueButtons = document.querySelectorAll('.die-value-btn');
-    console.log('Found die value buttons:', dieValueButtons.length);
-    dieValueButtons.forEach((btn, index) => {
-        console.log(`Adding listener to die value button ${index + 1}`);
-        btn.addEventListener('click', (e) => {
-            console.log('Die value button clicked:', e.currentTarget.dataset.value);
-            const value = parseInt(e.currentTarget.dataset.value);
-            if (currentEditingDie !== null) {
-                setDieValue(currentEditingDie, value);
-            }
-        });
-    });
-    
-    // Lock toggle
-    if (toggleLockBtn) {
-        console.log('Adding lock toggle listener');
-        toggleLockBtn.addEventListener('click', (e) => {
-            console.log('Lock toggle clicked');
-            if (currentEditingDie !== null) {
-                toggleDieFreeze(currentEditingDie);
-            }
-        });
-    }
-}
-
-function openDieEditModal(dieIndex) {
-    currentEditingDie = dieIndex;
-    const modal = document.getElementById('die-edit-modal');
-    const modalDieDisplay = document.getElementById('modal-die-display');
-    const lockBtn = document.getElementById('toggle-die-lock');
-    const lockText = document.getElementById('lock-text');
-    const lockIcon = lockBtn.querySelector('i');
-    
-    // Update modal title
-    document.getElementById('die-modal-title').textContent = `Edit Die ${dieIndex + 1}`;
-    
-    // Update die display in modal
-    const currentValue = getDiceValues()[dieIndex];
-    if (currentValue > 0) {
-        modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(currentValue)}"></i>`;
-        modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
-        modalDieDisplay.style.color = 'white';
-    } else {
-        modalDieDisplay.innerHTML = '<i class="fas fa-question"></i>';
-        modalDieDisplay.style.backgroundColor = 'white';
-        modalDieDisplay.style.color = '#333';
-    }
-    
-    // Update lock button
-    if (diceFrozen[dieIndex]) {
-        lockBtn.classList.add('locked');
-        lockIcon.className = 'fas fa-lock';
-        lockText.textContent = 'Unlock Die';
-    } else {
-        lockBtn.classList.remove('locked');
-        lockIcon.className = 'fas fa-unlock';
-        lockText.textContent = 'Lock Die';
-    }
-    
-    // Show modal
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-    
-    // Focus management
-    lockBtn.focus();
 }
 
 function closeDieEditModal() {
-    console.log('closeDieEditModal called');
     const modal = document.getElementById('die-edit-modal');
-    const editingDieIndex = currentEditingDie; // Store before clearing
-    
-    console.log('Modal element:', modal);
-    console.log('Current modal display:', modal ? modal.style.display : 'modal not found');
     
     if (modal) {
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
-        currentEditingDie = null;
         
         // Return focus to the die that was being edited
-        if (editingDieIndex !== null) {
-            const dieElement = document.getElementById(`die-${editingDieIndex + 1}`);
+        if (currentEditingDie !== null) {
+            const dieElement = document.getElementById(`die${currentEditingDie + 1}`);
             if (dieElement) {
                 dieElement.focus();
             }
         }
+        
+        currentEditingDie = null;
         console.log('Modal closed successfully');
     } else {
         console.error('Modal element not found');
     }
 }
 
-function setDieValue(dieIndex, value) {
-    if (dieIndex === null) return;
+function setCurrentDieValue(value) {
+    if (currentEditingDie === null || value < 1 || value > 6) return;
     
-    // Update the hidden input
-    const hiddenInput = document.getElementById(`die${dieIndex + 1}`);
-    hiddenInput.value = value;
-    
-    // Update the visual display
-    updateDiceDisplay();
-    
-    // Update modal display
+    const dieInput = document.getElementById(`die${currentEditingDie + 1}`);
     const modalDieDisplay = document.getElementById('modal-die-display');
-    modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
-    modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
-    modalDieDisplay.style.color = 'white';
     
-    // Calculate scores
-    calculateAllScores();
-    
-    // Update sticky header if visible
-    updateStickyDiceDisplay();
+    if (dieInput) {
+        dieInput.value = value;
+        
+        // Update modal display
+        if (modalDieDisplay) {
+            modalDieDisplay.innerHTML = `<i class="${getDiceSymbol(value)}"></i>`;
+            modalDieDisplay.style.backgroundColor = '#4CAF50';
+            modalDieDisplay.style.color = 'white';
+        }
+        
+        // Update main dice display and recalculate scores
+        updateDiceDisplay();
+        calculateAllScores();
+        
+        // Announce to screen readers
+        announceToScreenReader(`Die ${currentEditingDie + 1} set to ${value}`);
+    }
 }
 
-function toggleDieFreeze(dieIndex) {
-    if (dieIndex === null) return;
+function toggleCurrentDieLock() {
+    if (currentEditingDie === null) return;
     
-    diceFrozen[dieIndex] = !diceFrozen[dieIndex];
-    
-    // Update main die display
-    updateDiceDisplay();
-    
-    // Update modal display
-    const modalDieDisplay = document.getElementById('modal-die-display');
-    const currentValue = getDiceValues()[dieIndex];
-    if (currentValue > 0) {
-        modalDieDisplay.style.backgroundColor = diceFrozen[dieIndex] ? '#e3f2fd' : '#4CAF50';
-    }
-    
-    // Update lock button in modal
-    const lockBtn = document.getElementById('toggle-die-lock');
+    const lockButton = document.getElementById('toggle-die-lock');
     const lockText = document.getElementById('lock-text');
-    const lockIcon = lockBtn.querySelector('i');
+    const lockIcon = lockButton.querySelector('i');
     
-    if (diceFrozen[dieIndex]) {
-        lockBtn.classList.add('locked');
+    // Toggle the frozen state
+    diceFrozen[currentEditingDie] = !diceFrozen[currentEditingDie];
+    const isLocked = diceFrozen[currentEditingDie];
+    
+    // Update button appearance
+    if (isLocked) {
         lockIcon.className = 'fas fa-lock';
         lockText.textContent = 'Unlock Die';
-        announceToScreenReader(`Die ${dieIndex + 1} locked`);
+        lockButton.classList.add('locked');
     } else {
-        lockBtn.classList.remove('locked');
         lockIcon.className = 'fas fa-unlock';
         lockText.textContent = 'Lock Die';
-        announceToScreenReader(`Die ${dieIndex + 1} unlocked`);
+        lockButton.classList.remove('locked');
     }
     
-    // Update sticky header
-    updateStickyDiceDisplay();
+    // Update main dice display
+    updateDiceDisplay();
+    
+    // Announce to screen readers
+    announceToScreenReader(`Die ${currentEditingDie + 1} ${isLocked ? 'locked' : 'unlocked'}`);
 }
 
 // Score Confirmation Dialog Functions
@@ -2418,12 +2499,18 @@ async function confirmScore() {
     try {
         const data = await submitScore(category, score, dice);
         
+        // Check if we got valid data back
+        if (!data) {
+            showToast('Score submission failed', 'error');
+            return;
+        }
+        
         // Close the modal
         closeScoreConfirmationDialog();
         
         // Show success message
         const displayName = categoryDisplayNames[category] || category;
-        let message = `Score recorded: ${data.score} points for ${displayName}!`;
+        let message = `Score recorded: ${data.score || score} points for ${displayName}!`;
         
         // Add bonus information
         if (data.bonusYahtzee) {
