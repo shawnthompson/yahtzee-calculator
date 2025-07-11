@@ -758,20 +758,33 @@ input[required] + .input-help {
 }
 
 .die {
-    width: 60px;
-    height: 60px;
-    background: white;
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    display: flex;
+    width: 64px;
+    height: 64px;
+    font-size: 2.5em;
+    border-radius: 12px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    font-weight: bold;
-    color: var(--text-color);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    position: relative;
+    margin: 4px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.large-die {
+    width: 64px;
+    height: 64px;
+    font-size: 2.5em;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px auto;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
 }
 
 .die:hover {
